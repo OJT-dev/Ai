@@ -1,0 +1,6 @@
+python-dotenv
+openai
+agency-swarm
+websockets
+aiohttp
+gradio

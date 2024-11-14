@@ -1,0 +1,95 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Life Management Agency</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <div class="app">
+        <header>
+            <h1>Life Management Agency</h1>
+            <div class="header-controls">
+                <button id="clearChat" class="clear-button">Clear Chat</button>
+                <label class="show-details">
+                    <input type="checkbox" id="showDetails"> Show Agent Details
+                </label>
+            </div>
+        </header>
+
+        <main>
+            <div class="sidebar">
+                <div class="progress-section">
+                    <h3>Your Progress</h3>
+                    <div class="daily-streak">
+                        <span class="streak-count">0</span>
+                        <span class="streak-label">Day Streak</span>
+                    </div>
+                    <div class="progress-bars">
+                        <div class="progress-item">
+                            <label>Daily Goals</label>
+                            <div class="progress-bar">
+                                <div class="progress-fill" style="width: 0%"></div>
+                            </div>
+                            <span class="progress-text">0/5 Completed</span>
+                        </div>
+                        <div class="progress-item">
+                            <label>Weekly Challenge</label>
+                            <div class="progress-bar">
+                                <div class="progress-fill" style="width: 0%"></div>
+                            </div>
+                            <span class="progress-text">0% Complete</span>
+                        </div>
+                    </div>
+                    <div class="achievements">
+                        <h4>Recent Achievements</h4>
+                        <div class="achievement-grid" id="achievementGrid">
+                            <!-- Achievements will be added dynamically -->
+                        </div>
+                    </div>
+                    <div class="quick-stats">
+                        <h4>Quick Insights</h4>
+                        <div class="stats-grid">
+                            <div class="stat-item">
+                                <span class="stat-value">0</span>
+                                <span class="stat-label">Tasks Done</span>
+                            </div>
+                            <div class="stat-item">
+                                <span class="stat-value">0</span>
+                                <span class="stat-label">Points</span>
+                            </div>
+                            <div class="stat-item">
+                                <span class="stat-value">0</span>
+                                <span class="stat-label">Badges</span>
+                            </div>
+                            <div class="stat-item">
+                                <span class="stat-value">0</span>
+                                <span class="stat-label">Level</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="chat-container">
+                <div class="chat-messages" id="chatMessages">
+                    <!-- Messages will be dynamically added here -->
+                </div>
+                <div class="chat-input">
+                    <textarea id="userInput" placeholder="Type your message here..."></textarea>
+                    <button id="sendButton">Send</button>
+                </div>
+            </div>
+
+            <div class="agent-details" id="agentDetails" style="display: none;">
+                <h3>Active Agents</h3>
+                <div class="agent-list" id="agentList">
+                    <!-- Agent statuses will be shown here when details are enabled -->
+                </div>
+            </div>
+        </main>
+    </div>
+    <script src="app.js"></script>
+</body>
+</html>
