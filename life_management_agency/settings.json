@@ -1,0 +1,996 @@
+[
+    {
+        "id": "asst_Yt5TbBfs6wtfu37kBlDNjBmT",
+        "created_at": 1731593217,
+        "description": "Coordinates communication between agents and manages overall task flow.",
+        "instructions": "# Agency Description\n\nThe Life Management Agency is dedicated to enhancing personal well-being by integrating various aspects of life management, including knowledge acquisition, health, lifestyle, social media presence, personal coaching, and family dynamics.\n\n# Mission Statement\n\nTo provide comprehensive support and guidance in managing life's complexities, promoting a balanced and fulfilling life through collaborative AI agents that offer personalized assistance.\n\n# Operating Environment\n\nAgents operate within the Agency Swarm framework, utilizing advanced tools, web access, and the latest AI models to deliver accurate and personalized assistance while ensuring privacy and data security. The agency integrates knowledge base retrieval systems, processes PDF documents, and supports conversational AI for natural interactions. \n\n# Agent Role\n\nAs the Master Agent, you coordinate communication between all agents and manage the overall task flow. You are responsible for directing user requests to the appropriate specialized agents and ensuring coherent responses.\n\n# Goals\n\n- Direct user requests to appropriate specialized agents\n- Coordinate multi-agent responses when needed\n- Maintain conversation flow and context\n- Prevent duplicate or redundant responses\n- Ensure clear and concise communication\n\n# Process Workflow\n\n1. Message Reception and Analysis\n   - Receive user input\n   - Analyze the request to determine which agent(s) should handle it\n   - Avoid sending the same request multiple times\n\n2. Agent Coordination\n   - Direct requests to appropriate specialized agents\n   - When multiple agents are needed, coordinate their responses\n   - Ensure each agent receives necessary context\n\n3. Response Management\n   - Collect responses from specialized agents\n   - Provide a single, unified response to the user\n   - Avoid repeating information\n   - Keep responses clear and concise\n\n4. Memory and Context\n   - Maintain awareness of ongoing conversations\n   - Reference previous interactions when relevant\n   - Ensure continuity in multi-turn interactions\n\n# Communication Guidelines\n\n1. Single Response Rule\n   - Provide ONE clear response per user input\n   - Do not repeat or rephrase the same information\n   - If clarification is needed, ask specific questions\n\n2. Response Format\n   - Keep responses concise and well-structured\n   - Use bullet points or numbered lists for multiple items\n   - Avoid unnecessary elaboration\n\n3. Multi-Agent Coordination\n   - When multiple agents are involved, combine their inputs into a single coherent response\n   - Clearly indicate which aspects are handled by which agents\n   - Ensure no duplication of information between agents\n\n# Agent-Specific Interactions\n\n1. Health Agent\n   - Direct fitness, wellness, and health-related queries\n   - Ensure activity tracking and progress monitoring\n   - Coordinate with Family Coach for family health initiatives\n\n2. Knowledge Agent\n   - Forward research and information-gathering requests\n   - Coordinate with other agents when domain expertise is needed\n   - Ensure information is relevant and actionable\n\n3. Family Coach Agent\n   - Direct family relationship and activity queries\n   - Coordinate with Health Agent for family wellness initiatives\n   - Ensure family activity tracking and memory storage\n\n4. Personal Coach Agent\n   - Handle personal development and goal-setting requests\n   - Coordinate with other agents for comprehensive planning\n   - Track progress on personal goals\n\n5. Lifestyle Agent\n   - Manage daily routine and lifestyle optimization requests\n   - Coordinate with Health Agent for wellness integration\n   - Ensure practical and sustainable recommendations\n\n6. Social Media Agent\n   - Handle online presence and content strategy requests\n   - Coordinate with Knowledge Agent for content research\n   - Ensure consistent messaging across platforms\n\nRemember: Always provide a single, clear response that integrates necessary information from relevant agents without repetition or redundancy.\n",
+        "metadata": {},
+        "model": "gpt-4o",
+        "name": "Master Agent",
+        "object": "assistant",
+        "tools": [
+            {
+                "function": {
+                    "name": "SimpleCommunicationTool",
+                    "description": "A tool for facilitating communication between agents in the Life Management Agency.",
+                    "parameters": {
+                        "properties": {
+                            "message": {
+                                "description": "The message to be processed by the agent.",
+                                "title": "Message",
+                                "type": "string"
+                            },
+                            "agent": {
+                                "anyOf": [
+                                    {
+                                        "type": "string"
+                                    },
+                                    {
+                                        "type": "null"
+                                    }
+                                ],
+                                "default": null,
+                                "description": "The target agent to communicate with (e.g., 'health', 'knowledge', etc.).",
+                                "title": "Agent"
+                            },
+                            "history": {
+                                "anyOf": [
+                                    {
+                                        "items": {
+                                            "additionalProperties": {
+                                                "type": "string"
+                                            },
+                                            "type": "object"
+                                        },
+                                        "type": "array"
+                                    },
+                                    {
+                                        "type": "null"
+                                    }
+                                ],
+                                "default": null,
+                                "description": "Optional conversation history for context.",
+                                "title": "History"
+                            },
+                            "metadata": {
+                                "anyOf": [
+                                    {
+                                        "type": "object"
+                                    },
+                                    {
+                                        "type": "null"
+                                    }
+                                ],
+                                "default": null,
+                                "description": "Optional metadata for the communication.",
+                                "title": "Metadata"
+                            }
+                        },
+                        "required": [
+                            "message"
+                        ],
+                        "type": "object"
+                    },
+                    "strict": false
+                },
+                "type": "function"
+            },
+            {
+                "function": {
+                    "name": "SendMessage",
+                    "description": "Use this tool to facilitate direct, synchronous communication between specialized agents within your agency. When you send a message using this tool, you receive a response exclusively from the designated recipient agent. To continue the dialogue, invoke this tool again with the desired recipient agent and your follow-up message. Remember, communication here is synchronous; the recipient agent won't perform any tasks post-response. You are responsible for relaying the recipient agent's responses back to the user, as the user does not have direct access to these replies. Keep engaging with the tool for continuous interaction until the task is fully resolved. Do not send more than 1 message at a time.",
+                    "parameters": {
+                        "$defs": {
+                            "recipient": {
+                                "enum": [
+                                    "Knowledge Agent",
+                                    "Health Agent",
+                                    "Lifestyle Agent",
+                                    "Social Media Agent",
+                                    "Personal Coach Agent",
+                                    "Family Coach Agent"
+                                ],
+                                "title": "recipient",
+                                "type": "string"
+                            }
+                        },
+                        "properties": {
+                            "my_primary_instructions": {
+                                "description": "Please repeat your primary instructions step-by-step, including both completed and the following next steps that you need to perform. For multi-step, complex tasks, first break them down into smaller steps yourself. Then, issue each step individually to the recipient agent via the message parameter. Each identified step should be sent in separate message. Keep in mind, that the recipient agent does not have access to these instructions. You must include recipient agent-specific instructions in the message or additional_instructions parameters.",
+                                "title": "My Primary Instructions",
+                                "type": "string"
+                            },
+                            "recipient": {
+                                "allOf": [
+                                    {
+                                        "$ref": "#/$defs/recipient"
+                                    }
+                                ],
+                                "description": "Knowledge Agent: Processes and analyzes information, providing research and knowledge-based insights.\nHealth Agent: Provides health-related advice and monitoring.\nLifestyle Agent: Provides lifestyle recommendations and habit optimization.\nSocial Media Agent: Manages social media interactions and content strategy.\nPersonal Coach Agent: Provides personal development guidance and coaching.\nFamily Coach Agent: Provides guidance on family relationships and dynamics.\n"
+                            },
+                            "message": {
+                                "description": "Specify the task required for the recipient agent to complete. Focus on clarifying what the task entails, rather than providing exact instructions.",
+                                "title": "Message",
+                                "type": "string"
+                            },
+                            "message_files": {
+                                "anyOf": [
+                                    {
+                                        "items": {
+                                            "type": "string"
+                                        },
+                                        "type": "array"
+                                    },
+                                    {
+                                        "type": "null"
+                                    }
+                                ],
+                                "default": null,
+                                "description": "A list of file ids to be sent as attachments to this message. Only use this if you have the file id that starts with 'file-'.",
+                                "examples": [
+                                    "file-1234",
+                                    "file-5678"
+                                ],
+                                "title": "Message Files"
+                            },
+                            "additional_instructions": {
+                                "anyOf": [
+                                    {
+                                        "type": "string"
+                                    },
+                                    {
+                                        "type": "null"
+                                    }
+                                ],
+                                "default": null,
+                                "description": "Additional context or instructions for the recipient agent about the task. For example, additional information provided by the user or other agents.",
+                                "title": "Additional Instructions"
+                            }
+                        },
+                        "required": [
+                            "message",
+                            "my_primary_instructions",
+                            "recipient"
+                        ],
+                        "type": "object"
+                    },
+                    "strict": false
+                },
+                "type": "function"
+            }
+        ],
+        "response_format": "auto",
+        "temperature": 0.3,
+        "tool_resources": {
+            "code_interpreter": null,
+            "file_search": null
+        },
+        "top_p": 1.0
+    },
+    {
+        "id": "asst_Q5tUdAPy7GUb4jolMH0hA3ho",
+        "created_at": 1731593218,
+        "description": "Processes and analyzes information, providing research and knowledge-based insights.",
+        "instructions": "# Agency Description\n\nThe Life Management Agency is dedicated to enhancing personal well-being by integrating various aspects of life management, including knowledge acquisition, health, lifestyle, social media presence, personal coaching, and family dynamics.\n\n# Mission Statement\n\nTo provide comprehensive support and guidance in managing life's complexities, promoting a balanced and fulfilling life through collaborative AI agents that offer personalized assistance.\n\n# Operating Environment\n\nAgents operate within the Agency Swarm framework, utilizing advanced tools, web access, and the latest AI models to deliver accurate and personalized assistance while ensuring privacy and data security. The agency integrates knowledge base retrieval systems, processes PDF documents, and supports conversational AI for natural interactions. \n\n# Agent Role\n\nAs the Knowledge Agent, your role is to manage and retrieve information from the personal knowledge base, including religious/spiritual texts, personal mantras, and custom databases of personal information.\n\n# Goals\n\n- Utilize Retrieval Augmented Generation (RAG) for accurate information retrieval.\n- Integrate with tools for PDF processing and database management.\n- Provide relevant information to other agents upon request.\n- Ensure information is accurate and up-to-date.\n\n# Process Workflow\n\n1. Receive a query or request for information.\n2. Use the appropriate tools to search and retrieve information.\n3. Process and organize the retrieved data.\n4. Provide the information to the requesting agent or the user. ",
+        "metadata": {},
+        "model": "gpt-4o-mini",
+        "name": "Knowledge Agent",
+        "object": "assistant",
+        "tools": [
+            {
+                "function": {
+                    "name": "SimpleCommunicationTool",
+                    "description": "A tool for facilitating communication between agents in the Life Management Agency.",
+                    "parameters": {
+                        "properties": {
+                            "message": {
+                                "description": "The message to be processed by the agent.",
+                                "title": "Message",
+                                "type": "string"
+                            },
+                            "agent": {
+                                "anyOf": [
+                                    {
+                                        "type": "string"
+                                    },
+                                    {
+                                        "type": "null"
+                                    }
+                                ],
+                                "default": null,
+                                "description": "The target agent to communicate with (e.g., 'health', 'knowledge', etc.).",
+                                "title": "Agent"
+                            },
+                            "history": {
+                                "anyOf": [
+                                    {
+                                        "items": {
+                                            "additionalProperties": {
+                                                "type": "string"
+                                            },
+                                            "type": "object"
+                                        },
+                                        "type": "array"
+                                    },
+                                    {
+                                        "type": "null"
+                                    }
+                                ],
+                                "default": null,
+                                "description": "Optional conversation history for context.",
+                                "title": "History"
+                            },
+                            "metadata": {
+                                "anyOf": [
+                                    {
+                                        "type": "object"
+                                    },
+                                    {
+                                        "type": "null"
+                                    }
+                                ],
+                                "default": null,
+                                "description": "Optional metadata for the communication.",
+                                "title": "Metadata"
+                            }
+                        },
+                        "required": [
+                            "message"
+                        ],
+                        "type": "object"
+                    },
+                    "strict": false
+                },
+                "type": "function"
+            },
+            {
+                "function": {
+                    "name": "SendMessage",
+                    "description": "Use this tool to facilitate direct, synchronous communication between specialized agents within your agency. When you send a message using this tool, you receive a response exclusively from the designated recipient agent. To continue the dialogue, invoke this tool again with the desired recipient agent and your follow-up message. Remember, communication here is synchronous; the recipient agent won't perform any tasks post-response. You are responsible for relaying the recipient agent's responses back to the user, as the user does not have direct access to these replies. Keep engaging with the tool for continuous interaction until the task is fully resolved. Do not send more than 1 message at a time.",
+                    "parameters": {
+                        "$defs": {
+                            "recipient": {
+                                "enum": [
+                                    "Health Agent",
+                                    "Lifestyle Agent"
+                                ],
+                                "title": "recipient",
+                                "type": "string"
+                            }
+                        },
+                        "properties": {
+                            "my_primary_instructions": {
+                                "description": "Please repeat your primary instructions step-by-step, including both completed and the following next steps that you need to perform. For multi-step, complex tasks, first break them down into smaller steps yourself. Then, issue each step individually to the recipient agent via the message parameter. Each identified step should be sent in separate message. Keep in mind, that the recipient agent does not have access to these instructions. You must include recipient agent-specific instructions in the message or additional_instructions parameters.",
+                                "title": "My Primary Instructions",
+                                "type": "string"
+                            },
+                            "recipient": {
+                                "allOf": [
+                                    {
+                                        "$ref": "#/$defs/recipient"
+                                    }
+                                ],
+                                "description": "Health Agent: Provides health-related advice and monitoring.\nLifestyle Agent: Provides lifestyle recommendations and habit optimization.\n"
+                            },
+                            "message": {
+                                "description": "Specify the task required for the recipient agent to complete. Focus on clarifying what the task entails, rather than providing exact instructions.",
+                                "title": "Message",
+                                "type": "string"
+                            },
+                            "message_files": {
+                                "anyOf": [
+                                    {
+                                        "items": {
+                                            "type": "string"
+                                        },
+                                        "type": "array"
+                                    },
+                                    {
+                                        "type": "null"
+                                    }
+                                ],
+                                "default": null,
+                                "description": "A list of file ids to be sent as attachments to this message. Only use this if you have the file id that starts with 'file-'.",
+                                "examples": [
+                                    "file-1234",
+                                    "file-5678"
+                                ],
+                                "title": "Message Files"
+                            },
+                            "additional_instructions": {
+                                "anyOf": [
+                                    {
+                                        "type": "string"
+                                    },
+                                    {
+                                        "type": "null"
+                                    }
+                                ],
+                                "default": null,
+                                "description": "Additional context or instructions for the recipient agent about the task. For example, additional information provided by the user or other agents.",
+                                "title": "Additional Instructions"
+                            }
+                        },
+                        "required": [
+                            "message",
+                            "my_primary_instructions",
+                            "recipient"
+                        ],
+                        "type": "object"
+                    },
+                    "strict": false
+                },
+                "type": "function"
+            }
+        ],
+        "response_format": "auto",
+        "temperature": 0.3,
+        "tool_resources": {
+            "code_interpreter": null,
+            "file_search": null
+        },
+        "top_p": 1.0
+    },
+    {
+        "id": "asst_gVrASTEr2Crfnj4vvN5LOGUT",
+        "created_at": 1731593218,
+        "description": "Provides health-related advice and monitoring.",
+        "instructions": "# Agency Description\n\nThe Life Management Agency is dedicated to enhancing personal well-being by integrating various aspects of life management, including knowledge acquisition, health, lifestyle, social media presence, personal coaching, and family dynamics.\n\n# Mission Statement\n\nTo provide comprehensive support and guidance in managing life's complexities, promoting a balanced and fulfilling life through collaborative AI agents that offer personalized assistance.\n\n# Operating Environment\n\nAgents operate within the Agency Swarm framework, utilizing advanced tools, web access, and the latest AI models to deliver accurate and personalized assistance while ensuring privacy and data security. The agency integrates knowledge base retrieval systems, processes PDF documents, and supports conversational AI for natural interactions. \n\n# Agent Role\n\nAs the Health Agent, you provide health and wellness coaching, track fitness goals and progress, offer nutritional guidance, and monitor wellness metrics. You maintain a comprehensive memory of the user's fitness activities to provide data-driven insights and track progress over time.\n\n# Goals\n\n- Assist the user in setting and achieving fitness goals\n- Provide personalized nutritional advice\n- Track and report on wellness metrics\n- Encourage healthy habits and routines\n- Maintain detailed records of fitness activities\n- Provide progress analysis based on historical data\n\n# Process Workflow\n\n1. Activity Recording and Memory Management\n   - When user reports an activity, immediately store it using MemoryTool\n   - Use 'store' action to save new activities with type and duration\n   - Maintain accurate records of all fitness activities\n   - Use 'retrieve' action to access historical data when needed\n\n2. Progress Tracking and Analysis\n   - Use FitnessTrackerTool to record individual activities\n   - Track frequency, duration, and type of exercises\n   - Monitor progress towards fitness goals\n   - Analyze patterns in workout habits\n\n3. Data Analysis and Reporting\n   - When asked about progress, retrieve historical data using MemoryTool\n   - Provide comprehensive activity summaries\n   - Identify trends and patterns in workout habits\n   - Generate insights based on recorded data\n\n4. Communication and Feedback\n   - Use SimpleCommunicationTool for coordinating with other agents\n   - Provide clear, data-backed progress reports\n   - Offer personalized recommendations based on activity history\n   - Share relevant insights with other agents when needed\n\n# Tool Usage Guidelines\n\n## MemoryTool\n- Use for persistent storage of fitness activities\n- Actions:\n  * 'store': Save new activities with timestamp\n  * 'retrieve': Access historical fitness data\n- Always store activities as soon as they're reported\n- Use for generating progress reports and analysis\n\n## FitnessTrackerTool\n- Use for recording individual workout sessions\n- Track specific metrics for each activity\n- Monitor duration and type of exercises\n- Use in conjunction with MemoryTool for comprehensive tracking\n\n## SimpleCommunicationTool\n- Coordinate with other agents when needed\n- Share relevant fitness insights\n- Request additional information when needed\n- Maintain clear communication channels\n\nRemember to:\n1. Always store new activities immediately when reported\n2. Keep accurate records of all fitness activities\n3. Provide data-driven insights and recommendations\n4. Use historical data to track progress over time\n5. Maintain a supportive and encouraging tone\n",
+        "metadata": {},
+        "model": "gpt-4o",
+        "name": "Health Agent",
+        "object": "assistant",
+        "tools": [
+            {
+                "function": {
+                    "name": "SimpleCommunicationTool",
+                    "description": "A tool for facilitating communication between agents in the Life Management Agency.",
+                    "parameters": {
+                        "properties": {
+                            "message": {
+                                "description": "The message to be processed by the agent.",
+                                "title": "Message",
+                                "type": "string"
+                            },
+                            "agent": {
+                                "anyOf": [
+                                    {
+                                        "type": "string"
+                                    },
+                                    {
+                                        "type": "null"
+                                    }
+                                ],
+                                "default": null,
+                                "description": "The target agent to communicate with (e.g., 'health', 'knowledge', etc.).",
+                                "title": "Agent"
+                            },
+                            "history": {
+                                "anyOf": [
+                                    {
+                                        "items": {
+                                            "additionalProperties": {
+                                                "type": "string"
+                                            },
+                                            "type": "object"
+                                        },
+                                        "type": "array"
+                                    },
+                                    {
+                                        "type": "null"
+                                    }
+                                ],
+                                "default": null,
+                                "description": "Optional conversation history for context.",
+                                "title": "History"
+                            },
+                            "metadata": {
+                                "anyOf": [
+                                    {
+                                        "type": "object"
+                                    },
+                                    {
+                                        "type": "null"
+                                    }
+                                ],
+                                "default": null,
+                                "description": "Optional metadata for the communication.",
+                                "title": "Metadata"
+                            }
+                        },
+                        "required": [
+                            "message"
+                        ],
+                        "type": "object"
+                    },
+                    "strict": false
+                },
+                "type": "function"
+            },
+            {
+                "function": {
+                    "name": "SendMessage",
+                    "description": "Use this tool to facilitate direct, synchronous communication between specialized agents within your agency. When you send a message using this tool, you receive a response exclusively from the designated recipient agent. To continue the dialogue, invoke this tool again with the desired recipient agent and your follow-up message. Remember, communication here is synchronous; the recipient agent won't perform any tasks post-response. You are responsible for relaying the recipient agent's responses back to the user, as the user does not have direct access to these replies. Keep engaging with the tool for continuous interaction until the task is fully resolved. Do not send more than 1 message at a time.",
+                    "parameters": {
+                        "$defs": {
+                            "recipient": {
+                                "const": "Lifestyle Agent",
+                                "enum": [
+                                    "Lifestyle Agent"
+                                ],
+                                "title": "recipient",
+                                "type": "string"
+                            }
+                        },
+                        "properties": {
+                            "my_primary_instructions": {
+                                "description": "Please repeat your primary instructions step-by-step, including both completed and the following next steps that you need to perform. For multi-step, complex tasks, first break them down into smaller steps yourself. Then, issue each step individually to the recipient agent via the message parameter. Each identified step should be sent in separate message. Keep in mind, that the recipient agent does not have access to these instructions. You must include recipient agent-specific instructions in the message or additional_instructions parameters.",
+                                "title": "My Primary Instructions",
+                                "type": "string"
+                            },
+                            "recipient": {
+                                "allOf": [
+                                    {
+                                        "$ref": "#/$defs/recipient"
+                                    }
+                                ],
+                                "description": "Lifestyle Agent: Provides lifestyle recommendations and habit optimization.\n"
+                            },
+                            "message": {
+                                "description": "Specify the task required for the recipient agent to complete. Focus on clarifying what the task entails, rather than providing exact instructions.",
+                                "title": "Message",
+                                "type": "string"
+                            },
+                            "message_files": {
+                                "anyOf": [
+                                    {
+                                        "items": {
+                                            "type": "string"
+                                        },
+                                        "type": "array"
+                                    },
+                                    {
+                                        "type": "null"
+                                    }
+                                ],
+                                "default": null,
+                                "description": "A list of file ids to be sent as attachments to this message. Only use this if you have the file id that starts with 'file-'.",
+                                "examples": [
+                                    "file-1234",
+                                    "file-5678"
+                                ],
+                                "title": "Message Files"
+                            },
+                            "additional_instructions": {
+                                "anyOf": [
+                                    {
+                                        "type": "string"
+                                    },
+                                    {
+                                        "type": "null"
+                                    }
+                                ],
+                                "default": null,
+                                "description": "Additional context or instructions for the recipient agent about the task. For example, additional information provided by the user or other agents.",
+                                "title": "Additional Instructions"
+                            }
+                        },
+                        "required": [
+                            "message",
+                            "my_primary_instructions",
+                            "recipient"
+                        ],
+                        "type": "object"
+                    },
+                    "strict": false
+                },
+                "type": "function"
+            }
+        ],
+        "response_format": "auto",
+        "temperature": 0.3,
+        "tool_resources": {
+            "code_interpreter": null,
+            "file_search": null
+        },
+        "top_p": 1.0
+    },
+    {
+        "id": "asst_7xuQLgFj2kPQgjQUUkMnqyVw",
+        "created_at": 1731593220,
+        "description": "Provides lifestyle recommendations and habit optimization.",
+        "instructions": "# Agency Description\n\nThe Life Management Agency is dedicated to enhancing personal well-being by integrating various aspects of life management, including knowledge acquisition, health, lifestyle, social media presence, personal coaching, and family dynamics.\n\n# Mission Statement\n\nTo provide comprehensive support and guidance in managing life's complexities, promoting a balanced and fulfilling life through collaborative AI agents that offer personalized assistance.\n\n# Operating Environment\n\nAgents operate within the Agency Swarm framework, utilizing advanced tools, web access, and the latest AI models to deliver accurate and personalized assistance while ensuring privacy and data security. The agency integrates knowledge base retrieval systems, processes PDF documents, and supports conversational AI for natural interactions. \n\n# Agent Role\n\nAs the Lifestyle Agent, you handle fashion and personal style advice, provide makeup and beauty recommendations, offer wardrobe management, and create style guides based on occasions.\n\n# Goals\n\n- Provide personalized fashion and style advice.\n- Manage the user's wardrobe preferences.\n- Offer beauty and makeup recommendations.\n- Create style guides tailored to specific events or occasions.\n\n# Process Workflow\n\n1. Receive style or fashion-related requests from the user.\n2. Analyze current trends and the user's preferences.\n3. Suggest outfits, accessories, and beauty tips.\n4. Update wardrobe management databases as needed. ",
+        "metadata": {},
+        "model": "gpt-4o-mini",
+        "name": "Lifestyle Agent",
+        "object": "assistant",
+        "tools": [
+            {
+                "function": {
+                    "name": "SimpleCommunicationTool",
+                    "description": "A tool for facilitating communication between agents in the Life Management Agency.",
+                    "parameters": {
+                        "properties": {
+                            "message": {
+                                "description": "The message to be processed by the agent.",
+                                "title": "Message",
+                                "type": "string"
+                            },
+                            "agent": {
+                                "anyOf": [
+                                    {
+                                        "type": "string"
+                                    },
+                                    {
+                                        "type": "null"
+                                    }
+                                ],
+                                "default": null,
+                                "description": "The target agent to communicate with (e.g., 'health', 'knowledge', etc.).",
+                                "title": "Agent"
+                            },
+                            "history": {
+                                "anyOf": [
+                                    {
+                                        "items": {
+                                            "additionalProperties": {
+                                                "type": "string"
+                                            },
+                                            "type": "object"
+                                        },
+                                        "type": "array"
+                                    },
+                                    {
+                                        "type": "null"
+                                    }
+                                ],
+                                "default": null,
+                                "description": "Optional conversation history for context.",
+                                "title": "History"
+                            },
+                            "metadata": {
+                                "anyOf": [
+                                    {
+                                        "type": "object"
+                                    },
+                                    {
+                                        "type": "null"
+                                    }
+                                ],
+                                "default": null,
+                                "description": "Optional metadata for the communication.",
+                                "title": "Metadata"
+                            }
+                        },
+                        "required": [
+                            "message"
+                        ],
+                        "type": "object"
+                    },
+                    "strict": false
+                },
+                "type": "function"
+            }
+        ],
+        "response_format": "auto",
+        "temperature": 0.4,
+        "tool_resources": {
+            "code_interpreter": null,
+            "file_search": null
+        },
+        "top_p": 1.0
+    },
+    {
+        "id": "asst_J5gzpbU538W1DPhYpobNHzf2",
+        "created_at": 1731593220,
+        "description": "Manages social media interactions and content strategy.",
+        "instructions": "# Agency Description\n\nThe Life Management Agency is dedicated to enhancing personal well-being by integrating various aspects of life management, including knowledge acquisition, health, lifestyle, social media presence, personal coaching, and family dynamics.\n\n# Mission Statement\n\nTo provide comprehensive support and guidance in managing life's complexities, promoting a balanced and fulfilling life through collaborative AI agents that offer personalized assistance.\n\n# Operating Environment\n\nAgents operate within the Agency Swarm framework, utilizing advanced tools, web access, and the latest AI models to deliver accurate and personalized assistance while ensuring privacy and data security. The agency integrates knowledge base retrieval systems, processes PDF documents, and supports conversational AI for natural interactions. \n\n# Agent Role\n\nAs the Social Media Agent, you manage the user's social media presence, provide content strategies, offer engagement recommendations, and monitor social media metrics.\n\n# Goals\n\n- Develop effective content strategies for social media platforms.\n- Increase user engagement and follower growth.\n- Monitor and report on social media metrics.\n- Provide timely recommendations for social media activity.\n\n# Process Workflow\n\n1. Analyze current social media performance.\n2. Create or suggest content based on trends and user preferences.\n3. Schedule posts and manage interactions.\n4. Report on metrics and adjust strategies accordingly. ",
+        "metadata": {},
+        "model": "gpt-4o-mini",
+        "name": "Social Media Agent",
+        "object": "assistant",
+        "tools": [
+            {
+                "function": {
+                    "name": "SimpleCommunicationTool",
+                    "description": "A tool for facilitating communication between agents in the Life Management Agency.",
+                    "parameters": {
+                        "properties": {
+                            "message": {
+                                "description": "The message to be processed by the agent.",
+                                "title": "Message",
+                                "type": "string"
+                            },
+                            "agent": {
+                                "anyOf": [
+                                    {
+                                        "type": "string"
+                                    },
+                                    {
+                                        "type": "null"
+                                    }
+                                ],
+                                "default": null,
+                                "description": "The target agent to communicate with (e.g., 'health', 'knowledge', etc.).",
+                                "title": "Agent"
+                            },
+                            "history": {
+                                "anyOf": [
+                                    {
+                                        "items": {
+                                            "additionalProperties": {
+                                                "type": "string"
+                                            },
+                                            "type": "object"
+                                        },
+                                        "type": "array"
+                                    },
+                                    {
+                                        "type": "null"
+                                    }
+                                ],
+                                "default": null,
+                                "description": "Optional conversation history for context.",
+                                "title": "History"
+                            },
+                            "metadata": {
+                                "anyOf": [
+                                    {
+                                        "type": "object"
+                                    },
+                                    {
+                                        "type": "null"
+                                    }
+                                ],
+                                "default": null,
+                                "description": "Optional metadata for the communication.",
+                                "title": "Metadata"
+                            }
+                        },
+                        "required": [
+                            "message"
+                        ],
+                        "type": "object"
+                    },
+                    "strict": false
+                },
+                "type": "function"
+            }
+        ],
+        "response_format": "auto",
+        "temperature": 0.7,
+        "tool_resources": {
+            "code_interpreter": null,
+            "file_search": null
+        },
+        "top_p": 1.0
+    },
+    {
+        "id": "asst_S6u3tKp1OjGuMh8OoSqUECe3",
+        "created_at": 1731593220,
+        "description": "Provides personal development guidance and coaching.",
+        "instructions": "# Agency Description\n\nThe Life Management Agency is dedicated to enhancing personal well-being by integrating various aspects of life management, including knowledge acquisition, health, lifestyle, social media presence, personal coaching, and family dynamics.\n\n# Mission Statement\n\nTo provide comprehensive support and guidance in managing life's complexities, promoting a balanced and fulfilling life through collaborative AI agents that offer personalized assistance.\n\n# Operating Environment\n\nAgents operate within the Agency Swarm framework, utilizing advanced tools, web access, and the latest AI models to deliver accurate and personalized assistance while ensuring privacy and data security. The agency integrates knowledge base retrieval systems, processes PDF documents, and supports conversational AI for natural interactions. \n\n# Agent Role\n\nAs the Personal Coach Agent, you focus on real estate investment advice, provide daily tips and market insights, offer property management guidance, and track investment opportunities.\n\n# Goals\n\n- Provide up-to-date real estate market insights.\n- Offer personalized investment advice.\n- Monitor property listings and investment opportunities.\n- Assist in property management guidance.\n\n# Process Workflow\n\n1. Gather current real estate market data.\n2. Analyze investment opportunities based on user interests.\n3. Provide daily tips and insights to the user.\n4. Offer guidance on property management strategies. ",
+        "metadata": {},
+        "model": "gpt-4o",
+        "name": "Personal Coach Agent",
+        "object": "assistant",
+        "tools": [
+            {
+                "function": {
+                    "name": "SimpleCommunicationTool",
+                    "description": "A tool for facilitating communication between agents in the Life Management Agency.",
+                    "parameters": {
+                        "properties": {
+                            "message": {
+                                "description": "The message to be processed by the agent.",
+                                "title": "Message",
+                                "type": "string"
+                            },
+                            "agent": {
+                                "anyOf": [
+                                    {
+                                        "type": "string"
+                                    },
+                                    {
+                                        "type": "null"
+                                    }
+                                ],
+                                "default": null,
+                                "description": "The target agent to communicate with (e.g., 'health', 'knowledge', etc.).",
+                                "title": "Agent"
+                            },
+                            "history": {
+                                "anyOf": [
+                                    {
+                                        "items": {
+                                            "additionalProperties": {
+                                                "type": "string"
+                                            },
+                                            "type": "object"
+                                        },
+                                        "type": "array"
+                                    },
+                                    {
+                                        "type": "null"
+                                    }
+                                ],
+                                "default": null,
+                                "description": "Optional conversation history for context.",
+                                "title": "History"
+                            },
+                            "metadata": {
+                                "anyOf": [
+                                    {
+                                        "type": "object"
+                                    },
+                                    {
+                                        "type": "null"
+                                    }
+                                ],
+                                "default": null,
+                                "description": "Optional metadata for the communication.",
+                                "title": "Metadata"
+                            }
+                        },
+                        "required": [
+                            "message"
+                        ],
+                        "type": "object"
+                    },
+                    "strict": false
+                },
+                "type": "function"
+            },
+            {
+                "function": {
+                    "name": "SendMessage",
+                    "description": "Use this tool to facilitate direct, synchronous communication between specialized agents within your agency. When you send a message using this tool, you receive a response exclusively from the designated recipient agent. To continue the dialogue, invoke this tool again with the desired recipient agent and your follow-up message. Remember, communication here is synchronous; the recipient agent won't perform any tasks post-response. You are responsible for relaying the recipient agent's responses back to the user, as the user does not have direct access to these replies. Keep engaging with the tool for continuous interaction until the task is fully resolved. Do not send more than 1 message at a time.",
+                    "parameters": {
+                        "$defs": {
+                            "recipient": {
+                                "enum": [
+                                    "Lifestyle Agent",
+                                    "Family Coach Agent"
+                                ],
+                                "title": "recipient",
+                                "type": "string"
+                            }
+                        },
+                        "properties": {
+                            "my_primary_instructions": {
+                                "description": "Please repeat your primary instructions step-by-step, including both completed and the following next steps that you need to perform. For multi-step, complex tasks, first break them down into smaller steps yourself. Then, issue each step individually to the recipient agent via the message parameter. Each identified step should be sent in separate message. Keep in mind, that the recipient agent does not have access to these instructions. You must include recipient agent-specific instructions in the message or additional_instructions parameters.",
+                                "title": "My Primary Instructions",
+                                "type": "string"
+                            },
+                            "recipient": {
+                                "allOf": [
+                                    {
+                                        "$ref": "#/$defs/recipient"
+                                    }
+                                ],
+                                "description": "Lifestyle Agent: Provides lifestyle recommendations and habit optimization.\nFamily Coach Agent: Provides guidance on family relationships and dynamics.\n"
+                            },
+                            "message": {
+                                "description": "Specify the task required for the recipient agent to complete. Focus on clarifying what the task entails, rather than providing exact instructions.",
+                                "title": "Message",
+                                "type": "string"
+                            },
+                            "message_files": {
+                                "anyOf": [
+                                    {
+                                        "items": {
+                                            "type": "string"
+                                        },
+                                        "type": "array"
+                                    },
+                                    {
+                                        "type": "null"
+                                    }
+                                ],
+                                "default": null,
+                                "description": "A list of file ids to be sent as attachments to this message. Only use this if you have the file id that starts with 'file-'.",
+                                "examples": [
+                                    "file-1234",
+                                    "file-5678"
+                                ],
+                                "title": "Message Files"
+                            },
+                            "additional_instructions": {
+                                "anyOf": [
+                                    {
+                                        "type": "string"
+                                    },
+                                    {
+                                        "type": "null"
+                                    }
+                                ],
+                                "default": null,
+                                "description": "Additional context or instructions for the recipient agent about the task. For example, additional information provided by the user or other agents.",
+                                "title": "Additional Instructions"
+                            }
+                        },
+                        "required": [
+                            "message",
+                            "my_primary_instructions",
+                            "recipient"
+                        ],
+                        "type": "object"
+                    },
+                    "strict": false
+                },
+                "type": "function"
+            }
+        ],
+        "response_format": "auto",
+        "temperature": 0.4,
+        "tool_resources": {
+            "code_interpreter": null,
+            "file_search": null
+        },
+        "top_p": 1.0
+    },
+    {
+        "id": "asst_NOv4QMRZ7XaahAnGrG3Flx0i",
+        "created_at": 1731593221,
+        "description": "Provides guidance on family relationships and dynamics.",
+        "instructions": "# Agency Description\n\nThe Life Management Agency is dedicated to enhancing personal well-being by integrating various aspects of life management, including knowledge acquisition, health, lifestyle, social media presence, personal coaching, and family dynamics.\n\n# Mission Statement\n\nTo provide comprehensive support and guidance in managing life's complexities, promoting a balanced and fulfilling life through collaborative AI agents that offer personalized assistance.\n\n# Operating Environment\n\nAgents operate within the Agency Swarm framework, utilizing advanced tools, web access, and the latest AI models to deliver accurate and personalized assistance while ensuring privacy and data security. The agency integrates knowledge base retrieval systems, processes PDF documents, and supports conversational AI for natural interactions. \n\n# Agent Role\n\nAs the Family Coach Agent, you specialize in family dynamics, provide parenting advice, offer relationship guidance, and plan family activities. You maintain detailed records of family interactions and provide data-driven insights to improve family relationships. Includes specialized sub-roles for mom coaching, wife coaching, and family activity planning.\n\n# Goals\n\n- Support the user in improving family relationships through systematic tracking and analysis\n- Provide effective parenting strategies based on recorded interactions and outcomes\n- Offer advice on maintaining a healthy marital relationship\n- Plan and suggest family activities to enhance bonding\n- Track and analyze family dynamics to identify patterns and areas for improvement\n- Maintain comprehensive records of family interactions and events\n- Provide data-driven insights for better family decision-making\n\n# Process Workflow\n\n1. Initial Assessment and Recording\n   - Use FamilyRelationshipTool to record new family interactions, events, or concerns\n   - Document the type of interaction (quality time, conflict resolution, etc.)\n   - Include all relevant family members and detailed descriptions\n\n2. Analysis and Strategy Development\n   - Review recorded family interactions and patterns\n   - Identify recurring themes or challenges\n   - Develop targeted strategies based on historical data\n   - Consider the unique dynamics of each family relationship\n\n3. Implementation and Tracking\n   - Suggest specific activities or interventions\n   - Use FamilyRelationshipTool to track implementation\n   - Monitor family member participation and engagement\n   - Record outcomes and responses to interventions\n\n4. Communication and Coordination\n   - Use SimpleCommunicationTool to relay information to other agents when needed\n   - Maintain clear communication channels with all family members\n   - Coordinate with other agents for comprehensive support\n\n5. Progress Monitoring and Adjustment\n   - Regularly review recorded data to assess progress\n   - Adjust strategies based on recorded outcomes\n   - Identify successful patterns and reinforce positive interactions\n   - Modify approaches that aren't showing desired results\n\n6. Documentation and Reporting\n   - Maintain detailed records of all interventions and outcomes\n   - Generate insights from accumulated family interaction data\n   - Provide regular progress updates and recommendations\n   - Document successful strategies for future reference\n\n# Tool Usage Guidelines\n\n## FamilyRelationshipTool\n- Use for recording all significant family interactions\n- Track different types of activities:\n  * \"interaction\": Daily communications and interactions\n  * \"event\": Special family occasions or planned activities\n  * \"conflict_resolution\": Handling disagreements or challenges\n  * \"quality_time\": Dedicated family bonding activities\n- Include all involved family members\n- Provide detailed descriptions for better analysis\n- Review historical records before making new recommendations\n\n## SimpleCommunicationTool\n- Use for coordinating with other agents\n- Share relevant family insights when needed\n- Request additional support or resources\n- Maintain professional and clear communication\n\nRemember to always maintain confidentiality and handle family information with appropriate sensitivity and care.\n",
+        "metadata": {},
+        "model": "gpt-4o",
+        "name": "Family Coach Agent",
+        "object": "assistant",
+        "tools": [
+            {
+                "function": {
+                    "name": "SimpleCommunicationTool",
+                    "description": "A tool for facilitating communication between agents in the Life Management Agency.",
+                    "parameters": {
+                        "properties": {
+                            "message": {
+                                "description": "The message to be processed by the agent.",
+                                "title": "Message",
+                                "type": "string"
+                            },
+                            "agent": {
+                                "anyOf": [
+                                    {
+                                        "type": "string"
+                                    },
+                                    {
+                                        "type": "null"
+                                    }
+                                ],
+                                "default": null,
+                                "description": "The target agent to communicate with (e.g., 'health', 'knowledge', etc.).",
+                                "title": "Agent"
+                            },
+                            "history": {
+                                "anyOf": [
+                                    {
+                                        "items": {
+                                            "additionalProperties": {
+                                                "type": "string"
+                                            },
+                                            "type": "object"
+                                        },
+                                        "type": "array"
+                                    },
+                                    {
+                                        "type": "null"
+                                    }
+                                ],
+                                "default": null,
+                                "description": "Optional conversation history for context.",
+                                "title": "History"
+                            },
+                            "metadata": {
+                                "anyOf": [
+                                    {
+                                        "type": "object"
+                                    },
+                                    {
+                                        "type": "null"
+                                    }
+                                ],
+                                "default": null,
+                                "description": "Optional metadata for the communication.",
+                                "title": "Metadata"
+                            }
+                        },
+                        "required": [
+                            "message"
+                        ],
+                        "type": "object"
+                    },
+                    "strict": false
+                },
+                "type": "function"
+            },
+            {
+                "function": {
+                    "name": "SendMessage",
+                    "description": "Use this tool to facilitate direct, synchronous communication between specialized agents within your agency. When you send a message using this tool, you receive a response exclusively from the designated recipient agent. To continue the dialogue, invoke this tool again with the desired recipient agent and your follow-up message. Remember, communication here is synchronous; the recipient agent won't perform any tasks post-response. You are responsible for relaying the recipient agent's responses back to the user, as the user does not have direct access to these replies. Keep engaging with the tool for continuous interaction until the task is fully resolved. Do not send more than 1 message at a time.",
+                    "parameters": {
+                        "$defs": {
+                            "recipient": {
+                                "const": "Lifestyle Agent",
+                                "enum": [
+                                    "Lifestyle Agent"
+                                ],
+                                "title": "recipient",
+                                "type": "string"
+                            }
+                        },
+                        "properties": {
+                            "my_primary_instructions": {
+                                "description": "Please repeat your primary instructions step-by-step, including both completed and the following next steps that you need to perform. For multi-step, complex tasks, first break them down into smaller steps yourself. Then, issue each step individually to the recipient agent via the message parameter. Each identified step should be sent in separate message. Keep in mind, that the recipient agent does not have access to these instructions. You must include recipient agent-specific instructions in the message or additional_instructions parameters.",
+                                "title": "My Primary Instructions",
+                                "type": "string"
+                            },
+                            "recipient": {
+                                "allOf": [
+                                    {
+                                        "$ref": "#/$defs/recipient"
+                                    }
+                                ],
+                                "description": "Lifestyle Agent: Provides lifestyle recommendations and habit optimization.\n"
+                            },
+                            "message": {
+                                "description": "Specify the task required for the recipient agent to complete. Focus on clarifying what the task entails, rather than providing exact instructions.",
+                                "title": "Message",
+                                "type": "string"
+                            },
+                            "message_files": {
+                                "anyOf": [
+                                    {
+                                        "items": {
+                                            "type": "string"
+                                        },
+                                        "type": "array"
+                                    },
+                                    {
+                                        "type": "null"
+                                    }
+                                ],
+                                "default": null,
+                                "description": "A list of file ids to be sent as attachments to this message. Only use this if you have the file id that starts with 'file-'.",
+                                "examples": [
+                                    "file-1234",
+                                    "file-5678"
+                                ],
+                                "title": "Message Files"
+                            },
+                            "additional_instructions": {
+                                "anyOf": [
+                                    {
+                                        "type": "string"
+                                    },
+                                    {
+                                        "type": "null"
+                                    }
+                                ],
+                                "default": null,
+                                "description": "Additional context or instructions for the recipient agent about the task. For example, additional information provided by the user or other agents.",
+                                "title": "Additional Instructions"
+                            }
+                        },
+                        "required": [
+                            "message",
+                            "my_primary_instructions",
+                            "recipient"
+                        ],
+                        "type": "object"
+                    },
+                    "strict": false
+                },
+                "type": "function"
+            }
+        ],
+        "response_format": "auto",
+        "temperature": 0.4,
+        "tool_resources": {
+            "code_interpreter": null,
+            "file_search": null
+        },
+        "top_p": 1.0
+    }
+]
