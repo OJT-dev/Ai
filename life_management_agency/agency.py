@@ -1,5 +1,6 @@
 from dotenv import load_dotenv
 from agency_swarm import Agency
+import os
 
 # Import agents
 from life_management_agency.master_agent.master_agent import MasterAgent
@@ -40,5 +41,11 @@ agency = Agency([
 ], shared_instructions='agency_manifesto.md')
 
 if __name__ == "__main__":
-    # For web interface
-    agency.demo_gradio(height=900)
+    # For web interface with deployment configuration
+    port = int(os.getenv('PORT', 80))
+    agency.demo_gradio(
+        height=900,
+        share=True,
+        server_name="0.0.0.0",
+        server_port=port
+    )

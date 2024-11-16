@@ -1,0 +1,43 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  body {
+    @apply bg-gray-900 text-white;
+  }
+}
+
+@layer components {
+  .chat-message {
+    @apply p-4 rounded-lg mb-2;
+  }
+
+  .user-message {
+    @apply bg-blue-600 text-white ml-8;
+  }
+
+  .bot-message {
+    @apply bg-gray-800 text-white mr-8;
+  }
+
+  .header-section {
+    @apply bg-blue-600/10 p-4 rounded-lg mb-4;
+  }
+
+  .affirmation-box {
+    @apply bg-gray-800 p-4 rounded-lg mb-4;
+  }
+
+  .agent-box {
+    @apply bg-gray-800 p-4 rounded-lg mb-2 flex items-center justify-between;
+  }
+
+  .quick-actions {
+    @apply grid grid-cols-2 gap-4 mb-4;
+  }
+
+  .action-button {
+    @apply bg-gray-800 p-4 rounded-lg text-center cursor-pointer transition-colors hover:bg-gray-700;
+  }
+}

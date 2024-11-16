@@ -1,0 +1,35 @@
+modules = ["nodejs-20", "python-3.12:v20-20240117-0bd73cd"]
+
+# Main run command
+run = "python -m life_management_agency.agency"
+
+# Development environment configuration
+[env]
+PYTHONPATH = "${PYTHONPATH}:${HOME}"
+PORT = "80"
+
+# Nix configuration
+[nix]
+channel = "stable-24_05"
+
+# Deployment configuration
+[deployment]
+run = ["sh", "-c", "python -m life_management_agency.agency"]
+buildCommand = "pip install -r requirements.txt"
+ignorePorts = false
+deploymentTarget = "cloudrun"
+build = ["sh", "-c", "pip install -e ."]
+
+# Configure ports
+[deployment.ports]
+localPort = 80
+externalPort = 80
+
+# Language configuration
+[languages.python]
+pattern = "**/*.py"
+syntax = "python"
+
+[[ports]]
+localPort = 80
+externalPort = 80
