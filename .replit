@@ -1,12 +1,12 @@
 modules = ["nodejs-20", "python-3.12:v20-20240117-0bd73cd"]
 
 # Main run commands - using a startup script to run both backend and frontend
-run = ["sh", "-c", "cd life_management_agency && npm install && npm run dev & python -m life_management_agency.agency"]
+run = ["sh", "-c", "cd life_management_agency && (npm install && PORT=3000 npm run dev & FASTAPI_PORT=5000 python -m life_management_agency.agency)"]
 
 # Development environment configuration
 [env]
 PYTHONPATH = "${PYTHONPATH}:${HOME}"
-PORT = "3000"
+FASTAPI_PORT = "5000"
 NEXT_PUBLIC_API_URL = "http://localhost:5000"
 
 # Nix configuration
