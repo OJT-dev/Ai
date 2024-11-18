@@ -22,24 +22,26 @@ channel = "stable-24_05"
 
 # Deployment configuration
 [deployment]
-run = ["sh", "-c", "cd life_management_agency && npm run build && npm start"]
+run = ["sh", "-c", "cd life_management_agency && npm start"]
 buildCommand = """
+cd life_management_agency
 pip install -r requirements.txt
-cd life_management_agency && npm install && npm run build
+npm install
+npm run build
 """
 ignorePorts = false
 deploymentTarget = "cloudrun"
 
 # Configure ports
 [deployment.ports]
-# Frontend port
+# Frontend port for deployment
 localPort = 3000
-externalPort = 3000
+externalPort = 80
 
 # Backend port for local development
 [[ports]]
 localPort = 8000
-externalPort = 8000
+externalPort = 80
 
 # Language configurations
 [languages]
