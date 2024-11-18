@@ -29,9 +29,16 @@ class MemoryTool(BaseTool):
         """
         Stores or retrieves fitness activities from the memory storage.
         """
-        memory_file = "fitness_memory.json"
-        os.makedirs("memory", exist_ok=True)
-        memory_path = os.path.join("memory", memory_file)
+        # Use the same data directory as FitnessTrackerTool
+        data_dir = os.path.join(os.path.dirname(os.path.dirname(os.path.dirname(__file__))), "data", "health")
+        os.makedirs(data_dir, exist_ok=True)
+        
+        memory_file = os.path.join(data_dir, "fitness_memory.json")
+        
+        # Create the file with empty array if it doesn't exist
+        if not os.path.exists(memory_file):
+            with open(memory_file, "w") as f:
+                json.dump([], f)
         
         if self.action == "store":
             # Create memory entry
@@ -42,29 +49,26 @@ class MemoryTool(BaseTool):
             }
             
             # Read existing memories
-            memories = []
-            if os.path.exists(memory_path):
-                try:
-                    with open(memory_path, "r") as f:
-                        memories = json.load(f)
-                except json.JSONDecodeError:
-                    memories = []
+            try:
+                with open(memory_file, "r") as f:
+                    memories = json.load(f)
+            except json.JSONDecodeError:
+                memories = []
             
             # Add new memory
             memories.append(entry)
             
             # Save updated memories
-            with open(memory_path, "w") as f:
-                json.dump(memories, f, indent=2)
-            
-            return f"Stored activity: {self.activity_type} for {self.duration} minutes"
+            try:
+                with open(memory_file, "w") as f:
+                    json.dump(memories, f, indent=2)
+                return f"Successfully stored activity: {self.activity_type} for {self.duration} minutes"
+            except Exception as e:
+                return f"Error storing activity: {str(e)}"
             
         elif self.action == "retrieve":
-            if not os.path.exists(memory_path):
-                return "No fitness activities recorded yet."
-                
-            with open(memory_path, "r") as f:
-                try:
+            try:
+                with open(memory_file, "r") as f:
                     memories = json.load(f)
                     
                     # Filter memories by activity type if specified
@@ -81,9 +85,8 @@ class MemoryTool(BaseTool):
                         activities.append(activity)
                     
                     return "\n".join(activities)
-                    
-                except json.JSONDecodeError:
-                    return "Error reading fitness memory."
+            except Exception as e:
+                return f"Error retrieving activities: {str(e)}"
         
         return "Invalid action specified. Use 'store' or 'retrieve'."
 

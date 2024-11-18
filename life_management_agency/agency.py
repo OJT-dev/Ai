@@ -32,10 +32,10 @@ port = int(os.getenv('PORT', 80))
 # Initialize FastAPI
 app = FastAPI()
 
-# Configure CORS with more specific settings
+# Configure CORS
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["http://localhost:3000"],  # Frontend URL
+    allow_origins=["http://localhost:3000"],
     allow_credentials=True,
     allow_methods=["GET", "POST", "OPTIONS"],
     allow_headers=["*"],
@@ -62,24 +62,23 @@ social_media_agent = SocialMediaAgent()
 personal_coach_agent = PersonalCoachAgent()
 family_coach_agent = FamilyCoachAgent()
 
-# Initialize Agency Swarm with communication flows
+# Initialize Agency Swarm
 agency = Agency([
-    master_agent,  # Master agent is the entry point
-    [master_agent, knowledge_agent],  # Master can communicate with Knowledge
-    [master_agent, health_agent],     # Master can communicate with Health
-    [master_agent, lifestyle_agent],  # Master can communicate with Lifestyle
-    [master_agent, social_media_agent],  # Master can communicate with Social Media
-    [master_agent, personal_coach_agent],  # Master can communicate with Personal Coach
-    [master_agent, family_coach_agent],  # Master can communicate with Family Coach
-    [knowledge_agent, health_agent],  # Knowledge can communicate with Health
-    [knowledge_agent, lifestyle_agent],  # Knowledge can communicate with Lifestyle
-    [health_agent, lifestyle_agent],  # Health can communicate with Lifestyle
-    [personal_coach_agent, lifestyle_agent],  # Personal Coach can communicate with Lifestyle
-    [personal_coach_agent, family_coach_agent],  # Personal Coach can communicate with Family Coach
-    [family_coach_agent, lifestyle_agent]  # Family Coach can communicate with Lifestyle
+    master_agent,
+    [master_agent, knowledge_agent],
+    [master_agent, health_agent],
+    [master_agent, lifestyle_agent],
+    [master_agent, social_media_agent],
+    [master_agent, personal_coach_agent],
+    [master_agent, family_coach_agent],
+    [knowledge_agent, health_agent],
+    [knowledge_agent, lifestyle_agent],
+    [health_agent, lifestyle_agent],
+    [personal_coach_agent, lifestyle_agent],
+    [personal_coach_agent, family_coach_agent],
+    [family_coach_agent, lifestyle_agent]
 ], shared_instructions='agency_manifesto.md')
 
-# API endpoints
 @app.options("/api/chat")
 async def options_chat():
     return {"message": "OK"}
@@ -87,46 +86,31 @@ async def options_chat():
 @app.post("/api/chat")
 async def handle_chat(request: ChatRequest):
     try:
-        print(f"Processing request: {request}")  # Debug log
+        print(f"Processing request: {request}")
         
-        # Create tool instance
-        tool = master_agent.tools[0](
-            message=request.message,
-            agent=request.agent,
-            history=None
-        )
+        # Use master_agent to process request
+        response = await master_agent.process_request(request.message)
         
-        # Get tool response
-        tool_response = await tool.run()
-        print(f"Tool response: {tool_response}")  # Debug log
-        
-        if not tool_response or tool_response.get('status') != 'success':
-            print(f"Invalid tool response: {tool_response}")  # Debug log
-            return JSONResponse(
-                status_code=500,
-                content={
-                    "status": "error",
-                    "error": "Failed to get response from tool"
-                }
-            )
+        if not isinstance(response, dict):
+            raise ValueError("Invalid response format from master agent")
             
-        # Return response in format frontend expects
-        response = {
+        # Format response for frontend
+        formatted_response = {
             "status": "success",
             "data": {
-                "message": tool_response.get('response', ''),
-                "involved_agents": ['master_agent'],  # For now, just show master agent
+                "response": response.get('message', ''),
                 "metadata": {
-                    "thought_process": tool_response.get('metadata', {}).get('thought_process', [])
+                    "thought_process": response.get('metadata', {}).get('thought_process', []),
+                    "involved_agents": response.get('involved_agents', ['master'])
                 }
             }
         }
-        print(f"Sending response: {response}")  # Debug log
-
-        return JSONResponse(content=response)
+        
+        print(f"Sending response: {formatted_response}")
+        return JSONResponse(content=formatted_response)
         
     except Exception as e:
-        print(f"Error in handle_chat: {str(e)}")  # Debug log
+        print(f"Error in handle_chat: {str(e)}")
         return JSONResponse(
             status_code=500,
             content={
@@ -138,7 +122,6 @@ async def handle_chat(request: ChatRequest):
 # Graceful shutdown handler
 async def shutdown():
     print("Shutting down server...")
-    # Add any cleanup tasks here
     print("Server shutdown complete.")
 
 @app.on_event("shutdown")
@@ -154,22 +137,17 @@ def handle_sigint(signum, frame):
     print("Received SIGINT signal")
     asyncio.create_task(shutdown())
 
-# Gradio interface for development/testing
+# Gradio interface
 def create_gradio_interface():
     with gr.Blocks() as demo:
-        chatbot = gr.Chatbot(type='messages')  # Set type to 'messages' to fix deprecation warning
+        chatbot = gr.Chatbot(type='messages')
         msg = gr.Textbox()
         clear = gr.Button("Clear")
 
         async def respond(message, chat_history):
             try:
-                tool = master_agent.tools[0](
-                    message=message,
-                    agent=None,
-                    history=None
-                )
-                response = await tool.run()
-                chat_history.append((message, response.get('response', '')))
+                response = await master_agent.process_request(message)
+                chat_history.append((message, response['message']))
                 return "", chat_history
             except Exception as e:
                 return "", chat_history + [(message, f"Error: {str(e)}")]
@@ -181,13 +159,8 @@ def create_gradio_interface():
 
 if __name__ == "__main__":
     try:
-        # Create and configure Gradio interface
         demo = create_gradio_interface()
-        
-        # Mount Gradio app at /gradio path
         app = gr.mount_gradio_app(app, demo, path="/gradio")
-        
-        # Run the FastAPI application with debug mode enabled
         print(f"Starting server on port {port}")
         uvicorn.run(app, host="0.0.0.0", port=port, log_level="debug")
     except KeyboardInterrupt:

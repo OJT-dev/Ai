@@ -3,7 +3,8 @@
   "/_error": "pages/_error.js",
   "/_document": "pages/_document.js",
   "/home": "pages/home.js",
-  "/": "pages/index.js",
   "/chat": "pages/chat.js",
-  "/api/chat": "pages/api/chat.js"
+  "/api/chat": "pages/api/chat.js",
+  "/settings": "pages/settings.js",
+  "/": "pages/index.js"
 }

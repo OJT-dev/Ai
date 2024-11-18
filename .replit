@@ -1,33 +1,45 @@
 modules = ["nodejs-20", "python-3.12:v20-20240117-0bd73cd"]
 
-# Main run commands
+# Main run commands - using a startup script to run both backend and frontend
 run = """
 cd life_management_agency
 pip install --upgrade pip
 pip install -r requirements.txt
 npm install
-python -m uvicorn agency:app --host 0.0.0.0 --port 80 & npm run dev
+(PORT=3000 npm run dev & PYTHONPATH=$PYTHONPATH:$PWD PORT=8000 python -m uvicorn agency:app --host 0.0.0.0 --port 8000 --reload)
 """
 
 # Development environment configuration
 [env]
 PYTHONPATH = "${PYTHONPATH}:${HOME}"
-PORT = "80"
-NEXT_PUBLIC_BACKEND_PORT = "80"
-NEXT_PUBLIC_API_URL = "http://localhost:80"
+PORT = "8000"
+NEXT_PUBLIC_BACKEND_PORT = "8000"
+NEXT_PUBLIC_API_URL = "http://localhost:8000"
 
 # Nix configuration
 [nix]
 channel = "stable-24_05"
 
-# Configure ports
-[[ports]]
-localPort = 80
-externalPort = 80
+# Deployment configuration
+[deployment]
+run = ["sh", "-c", "cd life_management_agency && npm run build && npm start"]
+buildCommand = """
+pip install -r requirements.txt
+cd life_management_agency && npm install && npm run build
+"""
+ignorePorts = false
+deploymentTarget = "cloudrun"
 
-[[ports]]
+# Configure ports
+[deployment.ports]
+# Frontend port
 localPort = 3000
 externalPort = 3000
+
+# Backend port for local development
+[[ports]]
+localPort = 8000
+externalPort = 8000
 
 # Language configurations
 [languages]
