@@ -4,3 +4,9 @@ agency-swarm
 websockets
 aiohttp
 gradio
+fastapi
+uvicorn
+pydantic
+python-multipart
+httpx
+cors
