@@ -6,14 +6,15 @@ cd life_management_agency
 pip install --upgrade pip
 pip install -r requirements.txt
 npm install
-(PORT=3000 npm run dev & PYTHONPATH=$PYTHONPATH:$PWD PORT=5000 python -m uvicorn agency:app --host 0.0.0.0 --port 5000 --reload)
+(PORT=3000 npm run dev & PYTHONPATH=$PYTHONPATH:$PWD PORT=8000 python -m uvicorn agency:app --host 0.0.0.0 --port 8000 --reload)
 """
 
 # Development environment configuration
 [env]
 PYTHONPATH = "${PYTHONPATH}:${HOME}"
-PORT = "5000"
-NEXT_PUBLIC_API_URL = "http://localhost:5000"
+PORT = "8000"
+NEXT_PUBLIC_BACKEND_PORT = "8000"
+NEXT_PUBLIC_API_URL = "http://localhost:8000"
 
 # Nix configuration
 [nix]
@@ -37,8 +38,8 @@ externalPort = 3000
 
 # Backend port
 [[ports]]
-localPort = 5000
-externalPort = 5000
+localPort = 8000
+externalPort = 8000
 
 # Language configurations
 [languages]

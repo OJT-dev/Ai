@@ -6,7 +6,7 @@ type ChatResponse = {
   error?: string
 }
 
-const backendPort = process.env.NEXT_PUBLIC_BACKEND_PORT || '80';
+const backendPort = process.env.NEXT_PUBLIC_BACKEND_PORT || '8000';  // Default to 8000
 const backendUrl = `http://localhost:${backendPort}/api/chat`;
 
 export default async function handler(
@@ -20,9 +20,9 @@ export default async function handler(
   try {
     const { message } = req.body
     console.log('Received message:', message)  // Debug log
+    console.log('Using backend URL:', backendUrl)  // Debug log for URL
 
     // Make request to Python backend
-    console.log('Making request to backend:', backendUrl)  // Debug log
     const response = await fetch(backendUrl, {
       method: 'POST',
       headers: {
