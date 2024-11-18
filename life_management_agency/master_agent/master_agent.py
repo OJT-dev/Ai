@@ -4,14 +4,17 @@ from ..tools.SimpleCommunicationTool import SimpleCommunicationTool
 
 class MasterAgent(Agent):
     def __init__(self):
+        # Get absolute path to instructions file
+        instructions_path = os.path.join(os.path.dirname(__file__), 'instructions.md')
+        
         super().__init__(
             name="Master Agent",
             description="Coordinates communication between agents and manages overall task flow.",
-            instructions="./instructions.md",
+            instructions=instructions_path,
             tools=[SimpleCommunicationTool],
             temperature=0.3,  # Lower temperature for more focused responses
             max_prompt_tokens=25000,
-            model="gpt-4o"  # Using GPT-4o - most cost-effective high-performance model
+            model="gpt-4"  # Changed from gpt-4o to gpt-4
         )
         
         # Initialize agent coordination state
@@ -32,10 +35,35 @@ class MasterAgent(Agent):
         # Collect responses from required agents
         agent_responses = {}
         for agent_name in required_agents:
-            response = await self._get_agent_response(agent_name, message, history)
-            if response:
-                agent_responses[agent_name] = response
-                self.active_agents.add(agent_name)
+            try:
+                # Create tool instance with required parameters
+                tool = self.tools[0](
+                    message=message,  # Required message parameter
+                    agent=agent_name,  # Target agent
+                    history=history    # Optional history
+                )
+                # Execute the tool
+                response = await tool.run()
+                
+                if response and response.get('status') == 'success':
+                    agent_responses[agent_name] = response.get('response', '')
+                    self.active_agents.add(agent_name)
+            except Exception as e:
+                print(f"Error getting response from {agent_name}: {str(e)}")
+
+        # If no agent responses, use master agent's own tool
+        if not agent_responses:
+            try:
+                tool = self.tools[0](
+                    message=message,
+                    agent=None,  # No specific agent means master agent handles it
+                    history=history
+                )
+                response = await tool.run()
+                if response and response.get('status') == 'success':
+                    agent_responses['master'] = response.get('response', '')
+            except Exception as e:
+                print(f"Error getting master agent response: {str(e)}")
 
         # Combine responses into a coherent message
         final_response = await self._combine_responses(message, agent_responses)
@@ -80,20 +108,6 @@ class MasterAgent(Agent):
             
         return required_agents
 
-    async def _get_agent_response(self, agent_name, message, history):
-        """Get response from a specific agent."""
-        try:
-            # Use the SimpleCommunicationTool to interact with the agent
-            response = await self.tools[0].execute({
-                'agent': agent_name,
-                'message': message,
-                'history': history
-            })
-            return response.get('response')
-        except Exception as e:
-            print(f"Error getting response from {agent_name}: {str(e)}")
-            return None
-
     async def _combine_responses(self, original_message, agent_responses):
         """Combine responses from multiple agents into a coherent message."""
         if not agent_responses:
@@ -104,25 +118,9 @@ class MasterAgent(Agent):
             return next(iter(agent_responses.values()))
             
         # For multiple agent responses, create a coordinated response
-        coordination_prompt = f"""
-        Original request: {original_message}
-        Agent responses: {agent_responses}
+        combined_response = "Here's a comprehensive response to your request:\n\n"
         
-        Create a unified, coherent response that:
-        1. Addresses all aspects of the request
-        2. Integrates insights from all involved agents
-        3. Maintains a clear and organized structure
-        4. Avoids repetition
-        5. Provides actionable next steps
-        """
-        
-        try:
-            # Use the SimpleCommunicationTool for the final coordination
-            coordinated_response = await self.tools[0].execute({
-                'message': coordination_prompt
-            })
-            return coordinated_response.get('response')
-        except Exception as e:
-            print(f"Error coordinating responses: {str(e)}")
-            # Fallback to simple combination if coordination fails
-            return "\n\n".join(agent_responses.values())
+        for agent, response in agent_responses.items():
+            combined_response += f"{response}\n\n"
+            
+        return combined_response.strip()

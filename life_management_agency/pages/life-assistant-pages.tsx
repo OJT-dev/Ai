@@ -24,7 +24,7 @@ const WelcomePage = ({ onGetStarted }: { onGetStarted: () => void }) => (
 );
 
 // Home Page
-const HomePage = () => (
+const HomePage = ({ onNavigate }: { onNavigate: (page: string) => void }) => (
   <div className="h-screen bg-gray-900 text-white">
     <div className="bg-blue-500/10 p-4">
       <div className="flex items-center justify-between">
@@ -53,6 +53,7 @@ const HomePage = () => (
         <button 
           className="bg-gray-800 p-4 rounded-lg flex flex-col items-center"
           aria-label="Quick action: Voice Call"
+          onClick={() => onNavigate('call')}
         >
           <Phone className="text-blue-400 w-6 h-6 mb-2" />
           <span>Voice Call</span>
@@ -60,6 +61,7 @@ const HomePage = () => (
         <button 
           className="bg-gray-800 p-4 rounded-lg flex flex-col items-center"
           aria-label="Quick action: Chat"
+          onClick={() => onNavigate('chat')}
         >
           <MessageSquare className="text-green-400 w-6 h-6 mb-2" />
           <span>Chat</span>
@@ -228,7 +230,7 @@ const LifeAssistantApp = () => {
       case 'welcome':
         return <WelcomePage onGetStarted={handleGetStarted} />;
       case 'home':
-        return <HomePage />;
+        return <HomePage onNavigate={setCurrentPage} />;
       case 'chat':
         return <ChatPage />;
       case 'call':

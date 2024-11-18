@@ -1,6 +1,15 @@
 from agency_swarm.tools import BaseTool
 from pydantic import Field
 from typing import Optional, List, Dict, Any
+from openai import AsyncOpenAI
+import os
+from dotenv import load_dotenv
+
+# Load environment variables
+load_dotenv()
+
+# Initialize AsyncOpenAI client once
+client = AsyncOpenAI(api_key=os.getenv('OPENAI_API_KEY'))
 
 class SimpleCommunicationTool(BaseTool):
     """
@@ -32,41 +41,79 @@ class SimpleCommunicationTool(BaseTool):
             Dict containing:
             - response: The processed response
             - status: Success/failure status
-            - metadata: Any additional information
+            - metadata: Any additional information including agent thought process
         """
         try:
             # Initialize response structure
             response = {
                 'response': '',
                 'status': 'success',
-                'metadata': {}
+                'metadata': {
+                    'thought_process': []
+                }
             }
 
-            # If a specific agent is targeted
-            if self.agent:
-                # Here we would normally route to specific agent
-                # For now, we'll simulate agent-specific responses
-                response['response'] = self._simulate_agent_response(
-                    self.agent,
-                    self.message,
-                    self.history
-                )
-                response['metadata']['agent'] = self.agent
-            else:
-                # General message processing
-                response['response'] = f"Processed: {self.message}"
+            # Check if OpenAI API key is available
+            if not os.getenv('OPENAI_API_KEY'):
+                raise ValueError("OpenAI API key not found in environment variables")
+
+            # Prepare the system message based on agent type
+            system_message = self._get_system_message(self.agent)
+
+            # Prepare conversation history
+            messages = [
+                {"role": "system", "content": system_message},
+                {"role": "user", "content": self.message}
+            ]
 
             # Add conversation history if provided
             if self.history:
-                response['metadata']['history_length'] = len(self.history)
+                for msg in self.history:
+                    messages.append({
+                        "role": "user" if msg.get("sender") == "user" else "assistant",
+                        "content": msg.get("text", "")
+                    })
 
-            # Add any additional metadata
-            if self.metadata:
-                response['metadata'].update(self.metadata)
+            print(f"Sending request to OpenAI with messages: {messages}")  # Debug log
 
-            return response
+            try:
+                # Get response from OpenAI
+                chat_completion = await client.chat.completions.create(
+                    model="gpt-4",
+                    messages=messages,
+                    temperature=0.7,
+                    max_tokens=500
+                )
+
+                print(f"Received response from OpenAI: {chat_completion}")  # Debug log
+
+                # Extract response
+                ai_response = chat_completion.choices[0].message.content
+
+                # Update response structure
+                response['response'] = ai_response
+                response['metadata']['thought_process'].append({
+                    'agent': self.agent or 'master',
+                    'thought': f"Processing request about {self.message}"
+                })
+
+                # Add conversation history metadata if provided
+                if self.history:
+                    response['metadata']['history_length'] = len(self.history)
+
+                # Add any additional metadata
+                if self.metadata:
+                    response['metadata'].update(self.metadata)
+
+                print(f"Returning response: {response}")  # Debug log
+                return response
+
+            except Exception as api_error:
+                print(f"OpenAI API error: {str(api_error)}")  # Debug log
+                raise ValueError(f"Error communicating with OpenAI API: {str(api_error)}")
 
         except Exception as e:
+            print(f"Error in SimpleCommunicationTool: {str(e)}")  # Debug log
             return {
                 'response': f"Error processing message: {str(e)}",
                 'status': 'error',
@@ -76,48 +123,31 @@ class SimpleCommunicationTool(BaseTool):
                 }
             }
 
-    def _simulate_agent_response(self, agent: str, message: str, history: Optional[List[Dict[str, str]]] = None) -> str:
+    def _get_system_message(self, agent: Optional[str]) -> str:
         """
-        Simulate responses from different agents. This is a temporary solution
-        until proper agent-specific processing is implemented.
+        Get the appropriate system message based on agent type.
         """
-        # Use history if available to maintain context
-        context = ""
-        if history:
-            last_messages = history[-3:]  # Get last 3 messages for context
-            context = " ".join([msg['content'] for msg in last_messages])
-
-        # Simulate different agent responses
-        responses = {
-            'health': f"Health Agent: Analyzing health aspects of your request: {message}",
-            'knowledge': f"Knowledge Agent: Researching information about: {message}",
-            'lifestyle': f"Lifestyle Agent: Considering lifestyle implications of: {message}",
-            'social': f"Social Media Agent: Evaluating social media aspects of: {message}",
-            'personal': f"Personal Coach Agent: Providing personal development guidance for: {message}",
-            'family': f"Family Coach Agent: Addressing family-related aspects of: {message}"
+        system_messages = {
+            'health': """You are a Health Agent specializing in physical wellness, fitness, and nutrition. 
+                        Help users achieve their health goals through personalized advice and planning.""",
+            
+            'knowledge': """You are a Knowledge Agent with expertise in research and information analysis. 
+                          Provide evidence-based information and insights to help users make informed decisions.""",
+            
+            'lifestyle': """You are a Lifestyle Agent focused on daily routine optimization and habit formation. 
+                          Help users create sustainable lifestyle changes and balanced schedules.""",
+            
+            'social': """You are a Social Media Agent specializing in online presence and digital communication. 
+                        Help users manage their social media strategy and online interactions.""",
+            
+            'personal': """You are a Personal Coach Agent dedicated to individual growth and development. 
+                         Help users set and achieve personal goals while maintaining motivation.""",
+            
+            'family': """You are a Family Coach Agent specializing in family dynamics and relationships. 
+                        Help users foster healthy family connections and activities."""
         }
 
-        return responses.get(
-            agent,
-            f"Unknown agent '{agent}'. Message: {message}"
-        )
+        default_message = """You are a Master Agent coordinating responses across multiple specialized domains. 
+                           Help users by providing comprehensive guidance and directing them to appropriate specialized assistance."""
 
-if __name__ == "__main__":
-    # Example usage
-    import asyncio
-
-    async def test_tool():
-        # Test with specific agent
-        tool = SimpleCommunicationTool(
-            message="How can I improve my work-life balance?",
-            agent="lifestyle",
-            history=[
-                {"role": "user", "content": "I need help with my daily routine"},
-                {"role": "assistant", "content": "Let's analyze your schedule"}
-            ]
-        )
-        result = await tool.run()
-        print("Test result:", result)
-
-    # Run the test
-    asyncio.run(test_tool())
+        return system_messages.get(agent, default_message)
