@@ -45,6 +45,19 @@
                                 "default": null,
                                 "description": "Optional context from other agents for integrated response.",
                                 "title": "Context"
+                            },
+                            "session_id": {
+                                "anyOf": [
+                                    {
+                                        "type": "string"
+                                    },
+                                    {
+                                        "type": "null"
+                                    }
+                                ],
+                                "default": null,
+                                "description": "Session ID for maintaining chat history",
+                                "title": "Session Id"
                             }
                         },
                         "required": [
@@ -236,6 +249,19 @@
                                 "default": null,
                                 "description": "Optional context from other agents for integrated response.",
                                 "title": "Context"
+                            },
+                            "session_id": {
+                                "anyOf": [
+                                    {
+                                        "type": "string"
+                                    },
+                                    {
+                                        "type": "null"
+                                    }
+                                ],
+                                "default": null,
+                                "description": "Session ID for maintaining chat history",
+                                "title": "Session Id"
                             }
                         },
                         "required": [
@@ -441,6 +467,19 @@
                                 "default": null,
                                 "description": "Optional context from other agents for integrated response.",
                                 "title": "Context"
+                            },
+                            "session_id": {
+                                "anyOf": [
+                                    {
+                                        "type": "string"
+                                    },
+                                    {
+                                        "type": "null"
+                                    }
+                                ],
+                                "default": null,
+                                "description": "Session ID for maintaining chat history",
+                                "title": "Session Id"
                             }
                         },
                         "required": [
@@ -586,6 +625,19 @@
                                 "default": null,
                                 "description": "Optional context from other agents for integrated response.",
                                 "title": "Context"
+                            },
+                            "session_id": {
+                                "anyOf": [
+                                    {
+                                        "type": "string"
+                                    },
+                                    {
+                                        "type": "null"
+                                    }
+                                ],
+                                "default": null,
+                                "description": "Session ID for maintaining chat history",
+                                "title": "Session Id"
                             }
                         },
                         "required": [
@@ -652,6 +704,19 @@
                                 "default": null,
                                 "description": "Optional context from other agents for integrated response.",
                                 "title": "Context"
+                            },
+                            "session_id": {
+                                "anyOf": [
+                                    {
+                                        "type": "string"
+                                    },
+                                    {
+                                        "type": "null"
+                                    }
+                                ],
+                                "default": null,
+                                "description": "Session ID for maintaining chat history",
+                                "title": "Session Id"
                             }
                         },
                         "required": [
@@ -718,6 +783,19 @@
                                 "default": null,
                                 "description": "Optional context from other agents for integrated response.",
                                 "title": "Context"
+                            },
+                            "session_id": {
+                                "anyOf": [
+                                    {
+                                        "type": "string"
+                                    },
+                                    {
+                                        "type": "null"
+                                    }
+                                ],
+                                "default": null,
+                                "description": "Session ID for maintaining chat history",
+                                "title": "Session Id"
                             }
                         },
                         "required": [
@@ -897,6 +975,19 @@
                                 "default": null,
                                 "description": "Optional context from other agents for integrated response.",
                                 "title": "Context"
+                            },
+                            "session_id": {
+                                "anyOf": [
+                                    {
+                                        "type": "string"
+                                    },
+                                    {
+                                        "type": "null"
+                                    }
+                                ],
+                                "default": null,
+                                "description": "Session ID for maintaining chat history",
+                                "title": "Session Id"
                             }
                         },
                         "required": [

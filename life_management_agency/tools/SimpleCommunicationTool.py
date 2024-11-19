@@ -16,6 +16,9 @@ load_dotenv()
 # Initialize AsyncOpenAI client once
 client = AsyncOpenAI(api_key=os.getenv('OPENAI_API_KEY'))
 
+# Chat history store
+chat_histories = {}
+
 class SimpleCommunicationTool(BaseTool):
     """
     A tool for facilitating communication between agents in the Life Management Agency.
@@ -32,6 +35,10 @@ class SimpleCommunicationTool(BaseTool):
     context: Optional[Dict[str, Any]] = Field(
         None,
         description="Optional context from other agents for integrated response."
+    )
+    session_id: Optional[str] = Field(
+        None,
+        description="Session ID for maintaining chat history"
     )
 
     async def run(self) -> Dict[str, Any]:
@@ -58,6 +65,14 @@ class SimpleCommunicationTool(BaseTool):
             if not os.getenv('OPENAI_API_KEY'):
                 raise ValueError("OpenAI API key not found in environment variables")
 
+            # Initialize or get chat history
+            if self.session_id:
+                if self.session_id not in chat_histories:
+                    chat_histories[self.session_id] = []
+                history = chat_histories[self.session_id]
+            else:
+                history = []
+
             # Prepare the system message based on agent type
             system_message = self._get_system_message(self.agent)
 
@@ -74,11 +89,16 @@ class SimpleCommunicationTool(BaseTool):
                 The response should flow naturally and not feel like separate pieces of advice stitched together.
                 """
 
-            # Prepare conversation messages
+            # Prepare conversation messages with history
             messages = [
-                {"role": "system", "content": system_message},
-                {"role": "user", "content": enhanced_message}
+                {"role": "system", "content": system_message}
             ]
+            
+            # Add chat history
+            messages.extend(history)
+            
+            # Add current message
+            messages.append({"role": "user", "content": enhanced_message})
 
             logger.debug(f"Sending request to OpenAI with messages: {messages}")
 
@@ -95,6 +115,13 @@ class SimpleCommunicationTool(BaseTool):
 
                 # Extract response
                 ai_response = chat_completion.choices[0].message.content
+
+                # Update chat history if session_id is provided
+                if self.session_id:
+                    history.append({"role": "user", "content": enhanced_message})
+                    history.append({"role": "assistant", "content": ai_response})
+                    # Keep only last 10 messages to prevent context length issues
+                    chat_histories[self.session_id] = history[-10:]
 
                 # Update response structure
                 response['response'] = ai_response

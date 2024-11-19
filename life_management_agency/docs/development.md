@@ -1,12 +1,11 @@
-# Life Management Agency - Development Guide
-
-## Development Environment Setup
+## Development Guide
 
 ### Prerequisites
 - Python 3.8+
+- Node.js 16+
 - Git
 - Modern web browser
-- Text editor or IDE (VSCode recommended)
+- VSCode (recommended)
 
 ### Initial Setup
 
@@ -16,73 +15,100 @@ git clone [repository-url]
 cd life_management_agency
 ```
 
-2. **Create Virtual Environment**
+2. **Frontend Setup**
 ```bash
-# Windows
-python -m venv venv
-.\venv\Scripts\activate
+# Install Node dependencies
+npm install
 
-# Unix/MacOS
-python -m venv venv
-source venv/bin/activate
+# Start development server
+npm run dev
 ```
 
-3. **Install Dependencies**
+3. **Backend Setup**
 ```bash
+# Create virtual environment
+python -m venv venv
+# Windows
+.\venv\Scripts\activate
+# Unix/MacOS
+source venv/bin/activate
+
+# Install dependencies
 pip install -r requirements.txt
 ```
 
-## Project Structure
+### Project Structure
 
 ```
 life_management_agency/
-├── docs/                 # Documentation
-├── static/              # Web interface
-├── agents/              # Agent implementations
-│   ├── master_agent/
-│   ├── family_coach_agent/
-│   ├── health_agent/
-│   └── ...
-├── tools/               # Shared tools
-└── tests/               # Test suite
+├── components/          # React components
+│   ├── ui/             # Shared UI components
+│   └── ...             # Feature components
+├── pages/              # Next.js pages
+│   ├── api/            # API routes
+│   └── ...             # Page components
+├── styles/             # CSS styles
+├── lib/                # Shared utilities
+├── public/             # Static assets
+├── docs/               # Documentation
+├── tools/              # Shared tools
+├── tests/              # Test suite
+└── [agent_name]_agent/ # Agent implementations
+    ├── tools/          # Agent-specific tools
+    └── instructions.md # Agent documentation
 ```
 
-## Development Workflow
+### Development Workflow
 
-### 1. Code Style
-- Follow PEP 8 guidelines
-- Use type hints
-- Document all functions and classes
-- Keep functions focused and small
+#### 1. Frontend Development
 
-Example:
-```python
-from typing import List, Dict
+##### Component Structure
+```typescript
+// components/MyComponent.tsx
+import { FC } from 'react'
+import { Button } from './ui/button'
 
-def process_data(input_data: List[str]) -> Dict[str, any]:
-    """
-    Process input data and return structured results.
-    
-    Args:
-        input_data: List of strings to process
-        
-    Returns:
-        Dictionary containing processed results
-    """
-    # Implementation
-    pass
+interface MyComponentProps {
+  title: string
+}
+
+export const MyComponent: FC<MyComponentProps> = ({ title }) => {
+  return (
+    <div className="p-4">
+      <h2>{title}</h2>
+      <Button>Click me</Button>
+    </div>
+  )
+}
 ```
 
-### 2. Adding New Features
+##### Styling Guidelines
+- Use Tailwind CSS for styling
+- Follow component-first approach
+- Maintain consistent spacing
+- Use design system tokens
 
-#### Creating a New Agent
-1. Create new directory in `agents/`
-2. Implement agent class
-3. Add tests
-4. Update documentation
+##### Page Creation
+```typescript
+// pages/new-page.tsx
+import { NextPage } from 'next'
+import { MyComponent } from '../components/MyComponent'
 
+const NewPage: NextPage = () => {
+  return (
+    <div>
+      <MyComponent title="New Page" />
+    </div>
+  )
+}
+
+export default NewPage
+```
+
+#### 2. Backend Development
+
+##### Agent Implementation
 ```python
-# agents/new_agent/new_agent.py
 from typing import Dict, Any
 from ..base_agent import BaseAgent
 
@@ -92,20 +118,14 @@ class NewAgent(BaseAgent):
         self.name = "New Agent"
         self.description = "Description of new agent"
         
-    def process_request(self, request: Dict[str, Any]) -> Dict[str, Any]:
+    async def process_request(self, request: Dict[str, Any]) -> Dict[str, Any]:
         """Process incoming requests"""
         # Implementation
         pass
 ```
 
-#### Adding New Tools
-1. Create tool class in appropriate directory
-2. Implement required interfaces
-3. Add tests
-4. Update documentation
-
+##### Tool Implementation
 ```python
-# tools/new_tool.py
 from typing import Dict, Any
 from .base_tool import BaseTool
 
@@ -115,15 +135,27 @@ class NewTool(BaseTool):
         self.name = "New Tool"
         self.description = "Description of new tool"
         
-    def execute(self, params: Dict[str, Any]) -> Dict[str, Any]:
+    async def execute(self, params: Dict[str, Any]) -> Dict[str, Any]:
         """Execute tool functionality"""
         # Implementation
         pass
 ```
 
-### 3. Testing
+### Testing
 
-#### Running Tests
+#### Frontend Testing
+```bash
+# Run Jest tests
+npm test
+
+# Run with coverage
+npm test -- --coverage
+
+# Run specific test file
+npm test -- components/MyComponent.test.tsx
+```
+
+#### Backend Testing
 ```bash
 # Run all tests
 python -m pytest
@@ -135,186 +167,163 @@ python -m pytest tests/test_specific.py
 python -m pytest --cov=life_management_agency
 ```
 
-#### Writing Tests
-```python
-# tests/test_new_feature.py
-import pytest
-from life_management_agency.new_feature import NewFeature
+### Code Style
 
-def test_new_feature():
-    feature = NewFeature()
-    result = feature.process()
-    assert result.status == 'success'
+#### Frontend
+- Use TypeScript
+- Follow ESLint configuration
+- Use Prettier for formatting
+- Follow React best practices
+
+#### Backend
+- Follow PEP 8 guidelines
+- Use type hints
+- Document all functions
+- Keep functions focused
+
+### Git Workflow
+
+#### Branch Naming
+```
+feature/description   # New features
+fix/description      # Bug fixes
+docs/description     # Documentation
+refactor/description # Code refactoring
 ```
 
-### 4. UI Development
-
-#### Component Structure
-```javascript
-// static/app.js
-class ComponentName {
-    constructor() {
-        this.state = {};
-        this.initializeEvents();
-    }
-    
-    initializeEvents() {
-        // Event handling setup
-    }
-    
-    render() {
-        // Component rendering logic
-    }
-}
-```
-
-#### Styling Guidelines
-```css
-/* static/styles.css */
-.component-name {
-    /* Use BEM naming convention */
-    /* Maintain consistent spacing */
-    /* Follow color scheme */
-}
-```
-
-### 5. Documentation
-
-#### Adding Documentation
-1. Create markdown file in `docs/`
-2. Follow existing format
-3. Update documentation index
-4. Include code examples
-
-#### Documentation Style
-- Clear and concise
-- Include code examples
-- Explain complex concepts
-- Keep updated with changes
-
-## Git Workflow
-
-### 1. Branching Strategy
-```bash
-# Create feature branch
-git checkout -b feature/new-feature
-
-# Create bugfix branch
-git checkout -b bugfix/issue-description
-```
-
-### 2. Commit Messages
+#### Commit Messages
 ```
 type(scope): description
 
-- type: feat, fix, docs, style, refactor, test, chore
-- scope: agent, tool, ui, docs, etc.
-- description: clear, concise explanation
+Types: feat, fix, docs, style, refactor, test, chore
+Scope: component, page, agent, tool, etc.
 ```
 
-### 3. Pull Requests
-- Create detailed PR description
-- Reference related issues
-- Include testing steps
-- Add screenshots if UI changes
+### API Development
 
-## Deployment
+#### Creating API Routes
+```typescript
+// pages/api/new-endpoint.ts
+import type { NextApiRequest, NextApiResponse } from 'next'
 
-### 1. Local Development
+export default async function handler(
+  req: NextApiRequest,
+  res: NextApiResponse
+) {
+  try {
+    // Implementation
+    res.status(200).json({ success: true })
+  } catch (error) {
+    res.status(500).json({ error: 'Internal Server Error' })
+  }
+}
+```
+
+### Error Handling
+
+#### Frontend
+```typescript
+try {
+  // Operation
+} catch (error) {
+  console.error('Error:', error)
+  // Handle error appropriately
+}
+```
+
+#### Backend
+```python
+try:
+    # Operation
+    pass
+except Exception as e:
+    logging.error(f"Error: {str(e)}")
+    return {"error": str(e)}, 500
+```
+
+### Performance Optimization
+
+#### Frontend
+- Use React.memo for expensive components
+- Implement code splitting
+- Optimize images and assets
+- Use proper loading states
+
+#### Backend
+- Implement caching
+- Optimize database queries
+- Use async/await properly
+- Monitor memory usage
+
+### Security Best Practices
+
+1. **Frontend**
+- Validate all inputs
+- Sanitize data
+- Use HTTPS
+- Implement proper authentication
+
+2. **Backend**
+- Validate all inputs
+- Use proper error handling
+- Implement rate limiting
+- Secure sensitive data
+
+### Documentation
+
+#### Code Documentation
+- Document complex logic
+- Add JSDoc comments
+- Update README files
+- Keep API documentation current
+
+#### Architectural Documentation
+- Update design decisions
+- Document system changes
+- Maintain dependency list
+- Track breaking changes
+
+### Deployment
+
+#### Development
 ```bash
-# Start development server
-cd static
-python -m http.server 8000
+# Frontend
+npm run dev
+
+# Backend
+python agency.py
 ```
 
-### 2. Production Deployment
-- Ensure all tests pass
+#### Production
+- Follow deployment checklist
+- Run all tests
 - Update documentation
 - Tag release version
-- Follow deployment checklist
 
-## Troubleshooting
+### Monitoring
 
-### Common Issues
+#### Frontend
+- Implement error tracking
+- Monitor performance
+- Track user interactions
+- Analyze loading times
 
-1. **Server Not Starting**
-   - Check port availability
-   - Verify Python version
-   - Check file permissions
+#### Backend
+- Log all errors
+- Monitor system resources
+- Track API performance
+- Analyze agent behavior
 
-2. **Agent Communication Errors**
-   - Verify message format
-   - Check network connectivity
-   - Review error logs
+### Contributing Guidelines
 
-3. **UI Issues**
-   - Clear browser cache
-   - Check console errors
-   - Verify file paths
-
-## Performance Optimization
-
-### 1. Code Optimization
-- Use appropriate data structures
-- Implement caching where needed
-- Minimize database queries
-- Optimize loops and algorithms
-
-### 2. UI Optimization
-- Minimize DOM manipulation
-- Use event delegation
-- Implement lazy loading
-- Optimize assets
-
-## Security Considerations
-
-### 1. Input Validation
-```python
-def validate_input(data: Dict[str, Any]) -> bool:
-    """Validate input data"""
-    # Implementation
-    pass
-```
-
-### 2. Error Handling
-```python
-def safe_operation():
-    try:
-        # Operation
-        pass
-    except Exception as e:
-        log_error(e)
-        return error_response(e)
-```
-
-## Monitoring and Logging
-
-### 1. Logging Setup
-```python
-import logging
-
-logging.basicConfig(
-    level=logging.INFO,
-    format='%(asctime)s - %(name)s - %(levelname)s - %(message)s'
-)
-```
-
-### 2. Performance Monitoring
-- Track response times
-- Monitor resource usage
-- Log error rates
-- Analyze user patterns
-
-## Contributing Guidelines
-
-1. Fork the repository
+1. Fork repository
 2. Create feature branch
 3. Follow code style
 4. Add tests
 5. Update documentation
 6. Submit pull request
 
-This development guide provides a comprehensive overview of the development process. For more specific details, refer to:
+For more specific details, refer to:
 - [Architecture Documentation](architecture.md)
+- [API Documentation](api.md)
 - [UI Documentation](ui.md)
-- [Agent Documentation](agents.md)

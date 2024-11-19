@@ -12,8 +12,13 @@ type ChatResponse = {
   error?: string
 }
 
-const backendPort = process.env.NEXT_PUBLIC_BACKEND_PORT || '8000';  // Default to 8000
+const backendPort = process.env.NEXT_PUBLIC_BACKEND_PORT || '80';  // Updated to match Python server port
 const backendUrl = `http://localhost:${backendPort}/api/chat`;
+
+// Generate a unique session ID for each client
+function generateSessionId() {
+  return 'session_' + Math.random().toString(36).substring(2, 15) + Math.random().toString(36).substring(2, 15);
+}
 
 export default async function handler(
   req: NextApiRequest,
@@ -28,6 +33,14 @@ export default async function handler(
     console.log('Received message:', message)  // Debug log
     console.log('Using backend URL:', backendUrl)  // Debug log
 
+    // Get or create session ID from cookies
+    let sessionId = req.cookies.chatSessionId;
+    if (!sessionId) {
+      sessionId = generateSessionId();
+      // Set cookie options
+      res.setHeader('Set-Cookie', `chatSessionId=${sessionId}; Path=/; HttpOnly; SameSite=Strict; Max-Age=86400`); // 24 hours
+    }
+
     // Make request to Python backend
     const response = await fetch(backendUrl, {
       method: 'POST',
@@ -38,7 +51,8 @@ export default async function handler(
       body: JSON.stringify({
         message: message,
         agent: 'master_agent',
-        type: 'chat'
+        type: 'chat',
+        session_id: sessionId
       }),
     })
 
@@ -50,28 +64,17 @@ export default async function handler(
       throw new Error(`Backend responded with status ${response.status}: ${errorText}`)
     }
 
-    // Get response text and fix malformed JSON
-    const responseText = await response.text()
-    console.log('Raw backend response:', responseText)  // Debug log
-    
-    // Fix malformed JSON by adding missing commas
-    const fixedJson = responseText
-      .replace(/""(?=[a-zA-Z])/g, '","')  // Fix missing commas between properties
-      .replace(/}"/g, '},"')  // Fix missing commas between objects
-    
-    console.log('Fixed JSON:', fixedJson)  // Debug log
-    
-    const data = JSON.parse(fixedJson)
-    console.log('Parsed backend data:', data)  // Debug log
-    
+    const data = await response.json()
+    console.log('Backend response data:', data)  // Debug log
+
     // Format response to match frontend expectations
     const responseData: ChatResponse = {
       status: 'success',
       data: {
-        response: data.data?.message || data.data?.response || '',
+        response: data.data?.response || '',
         metadata: {
           thought_process: data.data?.metadata?.thought_process || [],
-          involved_agents: data.data?.involved_agents || []
+          involved_agents: data.data?.metadata?.involved_agents || []
         }
       }
     }

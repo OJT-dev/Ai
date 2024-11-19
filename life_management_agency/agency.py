@@ -7,8 +7,8 @@ from fastapi.responses import JSONResponse
 import uvicorn
 import asyncio
 import gradio as gr
-from pydantic import BaseModel
-from typing import Optional
+from pydantic import BaseModel, Field, validator
+from typing import Optional, List, Dict, Any, Union
 import json
 
 # Import agents
@@ -46,12 +46,49 @@ app.add_middleware(
 # Include routers
 app.include_router(profile_router, prefix="")
 
-# Request models
+def format_thought(thought: Union[Dict[str, Any], str]) -> str:
+    """Format a thought into a string."""
+    if isinstance(thought, str):
+        return thought
+    elif isinstance(thought, dict):
+        agent = thought.get('agent', 'unknown')
+        thought_content = thought.get('thought', '')
+        return f"[{agent}] {thought_content}"
+    else:
+        return str(thought)
+
+# Request/Response models
 class ChatRequest(BaseModel):
     message: str
     agent: str = "master_agent"
     type: str = "chat"
-    content: Optional[dict] = None
+    content: Optional[Dict[str, Any]] = None
+    session_id: Optional[str] = None
+
+class ChatMetadata(BaseModel):
+    thought_process: List[str] = Field(default_factory=list)
+    involved_agents: List[str] = Field(default_factory=list)
+
+    @validator('thought_process', pre=True)
+    def format_thoughts(cls, v):
+        if not v:
+            return []
+        if isinstance(v, list):
+            return [format_thought(thought) for thought in v]
+        if isinstance(v, dict):
+            return [format_thought(v)]
+        if isinstance(v, str):
+            return [v]
+        return [str(v)]
+
+class ChatData(BaseModel):
+    response: str
+    metadata: Optional[ChatMetadata] = Field(default_factory=ChatMetadata)
+
+class ChatResponse(BaseModel):
+    status: str
+    data: Optional[ChatData] = None
+    error: Optional[str] = None
 
 # Initialize agents
 master_agent = MasterAgent()
@@ -83,40 +120,65 @@ agency = Agency([
 async def options_chat():
     return {"message": "OK"}
 
-@app.post("/api/chat")
-async def handle_chat(request: ChatRequest):
+@app.post("/api/chat", response_model=ChatResponse)
+async def handle_chat(request: ChatRequest) -> ChatResponse:
     try:
         print(f"Processing request: {request}")
         
-        # Use master_agent to process request
-        response = await master_agent.process_request(request.message)
-        
-        if not isinstance(response, dict):
-            raise ValueError("Invalid response format from master agent")
-            
-        # Format response for frontend
-        formatted_response = {
-            "status": "success",
-            "data": {
-                "response": response.get('message', ''),
-                "metadata": {
-                    "thought_process": response.get('metadata', {}).get('thought_process', []),
-                    "involved_agents": response.get('involved_agents', ['master'])
-                }
-            }
+        # Create request context with session_id
+        request_context = {
+            'message': request.message,
+            'session_id': request.session_id
         }
         
-        print(f"Sending response: {formatted_response}")
-        return JSONResponse(content=formatted_response)
+        try:
+            # Process request through master agent
+            agent_response = await master_agent.process_request(request_context)
+            print(f"Raw agent response: {agent_response}")  # Debug log
+            
+            # Extract involved agents
+            involved_agents = agent_response.get('metadata', {}).get('involved_agents', ['master_agent'])
+            if isinstance(involved_agents, str):
+                involved_agents = [involved_agents]
+            
+            # Get response message
+            response_message = agent_response.get('message', '')
+            if not response_message and 'response' in agent_response:
+                response_message = agent_response['response']
+            
+            # Extract and format thought process
+            raw_thoughts = agent_response.get('metadata', {}).get('thought_process', [])
+            if isinstance(raw_thoughts, list):
+                formatted_thoughts = [format_thought(thought) for thought in raw_thoughts]
+            else:
+                formatted_thoughts = [format_thought(raw_thoughts)]
+            
+            # Create response with validation
+            data = ChatData(
+                response=response_message,
+                metadata=ChatMetadata(
+                    thought_process=formatted_thoughts,
+                    involved_agents=involved_agents
+                )
+            )
+            
+            response = ChatResponse(
+                status="success",
+                data=data
+            )
+            
+            print(f"Sending response: {response.dict()}")
+            return response
+            
+        except Exception as e:
+            print(f"Error processing request: {str(e)}")
+            raise HTTPException(status_code=500, detail=str(e))
         
     except Exception as e:
         print(f"Error in handle_chat: {str(e)}")
-        return JSONResponse(
-            status_code=500,
-            content={
-                "status": "error",
-                "error": str(e)
-            }
+        return ChatResponse(
+            status="error",
+            error=str(e)
         )
 
 # Graceful shutdown handler
@@ -146,7 +208,15 @@ def create_gradio_interface():
 
         async def respond(message, chat_history):
             try:
-                response = await master_agent.process_request(message)
+                # Create a session ID for Gradio interface
+                session_id = f"gradio_{len(chat_history)}"
+                request_context = {
+                    'message': message,
+                    'session_id': session_id
+                }
+                
+                # Process request through master agent
+                response = await master_agent.process_request(request_context)
                 chat_history.append((message, response['message']))
                 return "", chat_history
             except Exception as e:
