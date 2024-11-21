@@ -1,6 +1,7 @@
 from agency_swarm.tools import BaseTool
 from pydantic import Field
 from typing import List, Dict
+import asyncio
 
 class AgentCoordinationTool(BaseTool):
     """
@@ -56,41 +57,71 @@ class AgentCoordinationTool(BaseTool):
 
         return list(additional_domains)
 
-    def run(self) -> Dict[str, List[str]]:
+    def _map_domain_to_agent(self, domain: str) -> str:
+        """
+        Maps domain names to actual agent class names.
+        """
+        domain_to_agent = {
+            'knowledge': 'knowledge_agent',
+            'health': 'health_agent',
+            'lifestyle': 'lifestyle_agent',
+            'social': 'social_media_agent',
+            'personal': 'personal_coach_agent',
+            'family': 'family_coach_agent'
+        }
+        return domain_to_agent.get(domain, 'master_agent')
+
+    async def run(self) -> Dict[str, List[str]]:
         """
         Analyzes the message and returns list of required agents using advanced decision-making.
         Considers domain relevance scores and interdependencies.
         """
-        # Get relevance scores for each domain
-        relevance_scores = self._analyze_domain_relevance(self.message)
+        try:
+            # Get relevance scores for each domain
+            relevance_scores = self._analyze_domain_relevance(self.message)
 
-        # Select primary domains with significant relevance (threshold: 0.3)
-        primary_domains = [domain for domain, score in relevance_scores.items() if score > 0.3]
+            # Select primary domains with significant relevance (threshold: 0.3)
+            primary_domains = [domain for domain, score in relevance_scores.items() if score > 0.3]
 
-        # If no domains meet the threshold, select the top 2 most relevant domains
-        if not primary_domains:
-            sorted_domains = sorted(relevance_scores.items(), key=lambda x: x[1], reverse=True)
-            primary_domains = [domain for domain, _ in sorted_domains[:2]]
+            # If no domains meet the threshold, select the top 2 most relevant domains
+            if not primary_domains:
+                sorted_domains = sorted(relevance_scores.items(), key=lambda x: x[1], reverse=True)
+                primary_domains = [domain for domain, _ in sorted_domains[:2]]
 
-        # Add interdependent domains
-        additional_domains = self._identify_interdependencies(primary_domains)
-        
-        # Combine and deduplicate domains
-        required_agents = list(set(primary_domains + additional_domains))
+            # Add interdependent domains
+            additional_domains = self._identify_interdependencies(primary_domains)
+            
+            # Combine and deduplicate domains
+            all_domains = list(set(primary_domains + additional_domains))
 
-        # Always ensure knowledge agent is included for information synthesis
-        if 'knowledge' not in required_agents:
-            required_agents.append('knowledge')
+            # Map domains to agent names
+            required_agents = ['master_agent']  # Always include master agent
+            for domain in all_domains:
+                agent_name = self._map_domain_to_agent(domain)
+                if agent_name not in required_agents:
+                    required_agents.append(agent_name)
 
-        return {
-            "required_agents": required_agents,
-            "metadata": {
-                "relevance_scores": relevance_scores,
-                "primary_domains": primary_domains,
-                "added_dependencies": additional_domains
+            # Always ensure knowledge agent is included for information synthesis
+            if 'knowledge_agent' not in required_agents:
+                required_agents.append('knowledge_agent')
+
+            return {
+                "required_agents": required_agents,
+                "metadata": {
+                    "relevance_scores": relevance_scores,
+                    "primary_domains": primary_domains,
+                    "added_dependencies": additional_domains
+                }
             }
-        }
+        except Exception as e:
+            print(f"Error in AgentCoordinationTool: {str(e)}")
+            return {
+                "required_agents": ["master_agent"],
+                "metadata": {
+                    "error": str(e)
+                }
+            }
 
 if __name__ == "__main__":
     tool = AgentCoordinationTool(message="I want to improve my health and family relationships")
-    print(tool.run())
+    print(asyncio.run(tool.run()))

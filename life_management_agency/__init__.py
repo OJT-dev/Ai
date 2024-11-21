@@ -1,1 +1,4 @@
-# This file makes the life_management_agency directory a Python package
+from .health_agent import HealthAgent
+from .lifestyle_agent import LifestyleAgent
+
+__all__ = ['HealthAgent', 'LifestyleAgent']

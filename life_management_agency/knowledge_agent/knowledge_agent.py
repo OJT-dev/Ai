@@ -14,5 +14,5 @@ class KnowledgeAgent(Agent):
             ],
             temperature=0.3,
             max_prompt_tokens=25000,
-            model="gpt-4o-mini"
+            model="gpt-4o"  # Using gpt-4o for complex information processing and analysis
         )

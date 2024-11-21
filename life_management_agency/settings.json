@@ -72,7 +72,7 @@
             {
                 "function": {
                     "name": "AgentCoordinationTool",
-                    "description": "Tool for analyzing user requests and determining which specialized agents should handle them.",
+                    "description": "Tool for analyzing user requests and determining which specialized agents should handle them.\nImplements advanced decision-making for agent selection and coordination.",
                     "parameters": {
                         "properties": {
                             "message": {
@@ -121,7 +121,7 @@
                                         "$ref": "#/$defs/recipient"
                                     }
                                 ],
-                                "description": "Knowledge Agent: Processes and analyzes information, providing research and knowledge-based insights.\nHealth Agent: Provides health-related advice, fitness tracking, and wellness monitoring.\nLifestyle Agent: Provides lifestyle recommendations and habit optimization.\nSocial Media Agent: Manages social media interactions and content strategy.\nPersonal Coach Agent: Provides personal development guidance and coaching.\nFamily Coach Agent: Provides guidance on family relationships and dynamics.\n"
+                                "description": "Knowledge Agent: Processes and analyzes information, providing research and knowledge-based insights.\nHealth Agent: Provides health-related advice, fitness tracking, and wellness monitoring.\nLifestyle Agent: Manages schedule, tasks, and lifestyle optimization.\nSocial Media Agent: Manages social media interactions and content strategy.\nPersonal Coach Agent: Provides personal development guidance and coaching.\nFamily Coach Agent: Provides guidance on family relationships and dynamics.\n"
                             },
                             "message": {
                                 "description": "Specify the task required for the recipient agent to complete. Focus on clarifying what the task entails, rather than providing exact instructions.",
@@ -188,7 +188,7 @@
         "description": "Processes and analyzes information, providing research and knowledge-based insights.",
         "instructions": "# Agency Description\n\nThe Life Management Agency is dedicated to enhancing personal well-being by integrating various aspects of life management, including knowledge acquisition, health, lifestyle, social media presence, personal coaching, and family dynamics.\n\n# Mission Statement\n\nTo provide comprehensive support and guidance in managing life's complexities, promoting a balanced and fulfilling life through collaborative AI agents that offer personalized assistance.\n\n# Operating Environment\n\nAgents operate within the Agency Swarm framework, utilizing advanced tools, web access, and the latest AI models to deliver accurate and personalized assistance while ensuring privacy and data security. The agency integrates knowledge base retrieval systems, processes PDF documents, and supports conversational AI for natural interactions. \n\n# Agent Role\n\nThe Knowledge Agent acts as your personal intelligence center, managing information flow and learning to support informed life decisions. This agent researches, analyzes, and provides knowledge-based insights that enhance decision-making across all life domains, ensuring you stay well-informed and intellectually engaged.\n\n# Goals\n\n- Gather and analyze information crucial for life decisions\n- Research and provide insights using TavilySearchTool\n- Support continuous learning and intellectual growth\n- Keep you informed about relevant developments\n- Enable knowledge-based decision making in all life areas\n\n# Process Workflow\n\n1. Process information requests and identify knowledge needs\n2. Conduct targeted research using TavilySearchTool\n3. Analyze and synthesize information for practical application\n4. Share insights via SimpleCommunicationTool with other agents\n5. Maintain knowledge relevance for ongoing life optimization\n",
         "metadata": {},
-        "model": "gpt-4o-mini",
+        "model": "gpt-4o",
         "name": "Knowledge Agent",
         "object": "assistant",
         "tools": [
@@ -300,7 +300,7 @@
                                         "$ref": "#/$defs/recipient"
                                     }
                                 ],
-                                "description": "Health Agent: Provides health-related advice, fitness tracking, and wellness monitoring.\nLifestyle Agent: Provides lifestyle recommendations and habit optimization.\n"
+                                "description": "Health Agent: Provides health-related advice, fitness tracking, and wellness monitoring.\nLifestyle Agent: Manages schedule, tasks, and lifestyle optimization.\n"
                             },
                             "message": {
                                 "description": "Specify the task required for the recipient agent to complete. Focus on clarifying what the task entails, rather than providing exact instructions.",
@@ -367,7 +367,7 @@
         "description": "Provides health-related advice, fitness tracking, and wellness monitoring.",
         "instructions": "# Agency Description\n\nThe Life Management Agency is dedicated to enhancing personal well-being by integrating various aspects of life management, including knowledge acquisition, health, lifestyle, social media presence, personal coaching, and family dynamics.\n\n# Mission Statement\n\nTo provide comprehensive support and guidance in managing life's complexities, promoting a balanced and fulfilling life through collaborative AI agents that offer personalized assistance.\n\n# Operating Environment\n\nAgents operate within the Agency Swarm framework, utilizing advanced tools, web access, and the latest AI models to deliver accurate and personalized assistance while ensuring privacy and data security. The agency integrates knowledge base retrieval systems, processes PDF documents, and supports conversational AI for natural interactions. \n\n# Agent Role\n\nThe Health Agent serves as your personal wellness architect, managing all aspects of physical and mental health to ensure optimal vitality for life success. This agent monitors health metrics, provides actionable wellness strategies, and coordinates with other life domains to maintain peak performance in daily activities.\n\n# Goals\n\n- Optimize physical and mental well-being for peak life performance\n- Track and improve vital health metrics using FitnessTrackerTool\n- Maintain comprehensive health records with MemoryTool\n- Create sustainable wellness habits that enhance daily life\n- Coordinate with other agents for holistic health integration\n\n# Process Workflow\n\n1. Monitor and track health metrics using FitnessTrackerTool\n2. Store and analyze health data using MemoryTool for long-term insights\n3. Develop personalized wellness strategies that support life goals\n4. Coordinate with other agents via SimpleCommunicationTool for integrated health support\n5. Continuously optimize health practices for enhanced life quality\n",
         "metadata": {},
-        "model": "gpt-4",
+        "model": "gpt-4o-mini",
         "name": "Health Agent",
         "object": "assistant",
         "tools": [
@@ -378,21 +378,20 @@
                     "parameters": {
                         "properties": {
                             "activity": {
+                                "default": "",
                                 "description": "The fitness activity performed by the user (e.g., running, yoga).",
                                 "title": "Activity",
                                 "type": "string"
                             },
                             "duration_minutes": {
+                                "default": 0,
                                 "description": "Duration of the activity in minutes.",
                                 "title": "Duration Minutes",
                                 "type": "integer"
                             }
                         },
-                        "required": [
-                            "activity",
-                            "duration_minutes"
-                        ],
-                        "type": "object"
+                        "type": "object",
+                        "required": []
                     },
                     "strict": false
                 },
@@ -401,15 +400,17 @@
             {
                 "function": {
                     "name": "MemoryTool",
-                    "description": "A tool for storing and retrieving fitness activities and progress data.\nThis tool helps maintain a persistent memory of user's fitness journey.",
+                    "description": "A tool for storing and retrieving fitness activities and wellness metrics.\nThis tool helps maintain a persistent memory of user's fitness journey.",
                     "parameters": {
                         "properties": {
                             "action": {
-                                "description": "Action to perform: 'store' or 'retrieve'",
+                                "default": "get_metrics",
+                                "description": "Action to perform: 'store', 'retrieve', or 'get_metrics'",
                                 "title": "Action",
                                 "type": "string"
                             },
                             "activity_type": {
+                                "default": "",
                                 "description": "Type of activity (e.g., 'yoga', 'running', etc.)",
                                 "title": "Activity Type",
                                 "type": "string"
@@ -421,11 +422,8 @@
                                 "type": "integer"
                             }
                         },
-                        "required": [
-                            "action",
-                            "activity_type"
-                        ],
-                        "type": "object"
+                        "type": "object",
+                        "required": []
                     },
                     "strict": false
                 },
@@ -518,7 +516,7 @@
                                         "$ref": "#/$defs/recipient"
                                     }
                                 ],
-                                "description": "Lifestyle Agent: Provides lifestyle recommendations and habit optimization.\n"
+                                "description": "Lifestyle Agent: Manages schedule, tasks, and lifestyle optimization.\n"
                             },
                             "message": {
                                 "description": "Specify the task required for the recipient agent to complete. Focus on clarifying what the task entails, rather than providing exact instructions.",
@@ -582,10 +580,10 @@
     {
         "id": "asst_7xuQLgFj2kPQgjQUUkMnqyVw",
         "created_at": 1731593220,
-        "description": "Provides lifestyle recommendations and habit optimization.",
+        "description": "Manages schedule, tasks, and lifestyle optimization.",
         "instructions": "# Agency Description\n\nThe Life Management Agency is dedicated to enhancing personal well-being by integrating various aspects of life management, including knowledge acquisition, health, lifestyle, social media presence, personal coaching, and family dynamics.\n\n# Mission Statement\n\nTo provide comprehensive support and guidance in managing life's complexities, promoting a balanced and fulfilling life through collaborative AI agents that offer personalized assistance.\n\n# Operating Environment\n\nAgents operate within the Agency Swarm framework, utilizing advanced tools, web access, and the latest AI models to deliver accurate and personalized assistance while ensuring privacy and data security. The agency integrates knowledge base retrieval systems, processes PDF documents, and supports conversational AI for natural interactions. \n\n# Agent Role\n\nThe Lifestyle Agent orchestrates your daily living patterns, routines, and habits to create an optimized lifestyle that supports your life goals. This agent designs and maintains the practical frameworks of your day-to-day life, ensuring that your time and energy are aligned with your priorities and aspirations.\n\n# Goals\n\n- Design and optimize daily routines for maximum effectiveness\n- Create sustainable habits that support life goals\n- Balance work, rest, and personal time efficiently\n- Enhance quality of life through practical improvements\n- Coordinate lifestyle elements with other life domains\n\n# Process Workflow\n\n1. Analyze current lifestyle patterns and identify optimization opportunities\n2. Develop personalized routines and habit strategies\n3. Implement lifestyle improvements through SimpleCommunicationTool\n4. Monitor effectiveness and adjust based on feedback\n5. Coordinate with other agents for comprehensive lifestyle enhancement\n",
         "metadata": {},
-        "model": "gpt-4o-mini",
+        "model": "gpt-4",
         "name": "Lifestyle Agent",
         "object": "assistant",
         "tools": [
@@ -651,7 +649,7 @@
             }
         ],
         "response_format": "auto",
-        "temperature": 0.4,
+        "temperature": 0.3,
         "tool_resources": {
             "code_interpreter": null,
             "file_search": null
@@ -834,7 +832,7 @@
                                         "$ref": "#/$defs/recipient"
                                     }
                                 ],
-                                "description": "Lifestyle Agent: Provides lifestyle recommendations and habit optimization.\nFamily Coach Agent: Provides guidance on family relationships and dynamics.\n"
+                                "description": "Lifestyle Agent: Manages schedule, tasks, and lifestyle optimization.\nFamily Coach Agent: Provides guidance on family relationships and dynamics.\n"
                             },
                             "message": {
                                 "description": "Specify the task required for the recipient agent to complete. Focus on clarifying what the task entails, rather than providing exact instructions.",
@@ -1026,7 +1024,7 @@
                                         "$ref": "#/$defs/recipient"
                                     }
                                 ],
-                                "description": "Lifestyle Agent: Provides lifestyle recommendations and habit optimization.\n"
+                                "description": "Lifestyle Agent: Manages schedule, tasks, and lifestyle optimization.\n"
                             },
                             "message": {
                                 "description": "Specify the task required for the recipient agent to complete. Focus on clarifying what the task entails, rather than providing exact instructions.",

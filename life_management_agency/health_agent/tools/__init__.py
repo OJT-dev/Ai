@@ -1,1 +1,4 @@
-# This file makes the health_agent/tools directory a Python package
+from .FitnessTrackerTool import FitnessTrackerTool
+from .MemoryTool import MemoryTool
+
+__all__ = ['FitnessTrackerTool', 'MemoryTool']

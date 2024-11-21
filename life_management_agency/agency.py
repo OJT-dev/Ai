@@ -20,73 +20,25 @@ from life_management_agency.social_media_agent.social_media_agent import SocialM
 from life_management_agency.personal_coach_agent.personal_coach_agent import PersonalCoachAgent
 from life_management_agency.family_coach_agent.family_coach_agent import FamilyCoachAgent
 
-# Import routes
-from life_management_agency.routes.profile import router as profile_router
-
 # Load environment variables
 load_dotenv()
-
-# Get port from environment variable
-port = int(os.getenv('PORT', 80))
-
-# Initialize FastAPI
-app = FastAPI()
-
-# Configure CORS
-app.add_middleware(
-    CORSMiddleware,
-    allow_origins=["http://localhost:3000"],
-    allow_credentials=True,
-    allow_methods=["GET", "POST", "OPTIONS"],
-    allow_headers=["*"],
-    expose_headers=["*"],
-    max_age=3600
-)
-
-# Include routers
-app.include_router(profile_router, prefix="")
-
-def format_thought(thought: Union[Dict[str, Any], str]) -> str:
-    """Format a thought into a string."""
-    if isinstance(thought, str):
-        return thought
-    elif isinstance(thought, dict):
-        agent = thought.get('agent', 'unknown')
-        thought_content = thought.get('thought', '')
-        return f"[{agent}] {thought_content}"
-    else:
-        return str(thought)
 
 # Request/Response models
 class ChatRequest(BaseModel):
     message: str
-    agent: str = "master_agent"
-    type: str = "chat"
-    content: Optional[Dict[str, Any]] = None
     session_id: Optional[str] = None
+    type: str = "chat"
 
 class ChatMetadata(BaseModel):
     thought_process: List[str] = Field(default_factory=list)
     involved_agents: List[str] = Field(default_factory=list)
 
-    @validator('thought_process', pre=True)
-    def format_thoughts(cls, v):
-        if not v:
-            return []
-        if isinstance(v, list):
-            return [format_thought(thought) for thought in v]
-        if isinstance(v, dict):
-            return [format_thought(v)]
-        if isinstance(v, str):
-            return [v]
-        return [str(v)]
-
 class ChatData(BaseModel):
     response: str
-    metadata: Optional[ChatMetadata] = Field(default_factory=ChatMetadata)
+    metadata: Optional[ChatMetadata] = None
 
 class ChatResponse(BaseModel):
-    status: str
+    status: str = "success"
     data: Optional[ChatData] = None
     error: Optional[str] = None
 
@@ -116,126 +68,77 @@ agency = Agency([
     [family_coach_agent, lifestyle_agent]
 ], shared_instructions='agency_manifesto.md')
 
+# Initialize FastAPI
+app = FastAPI()
+
+# Configure CORS
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["http://localhost:3000"],
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
+
 @app.options("/api/chat")
-async def options_chat():
+async def chat_options():
     return {"message": "OK"}
 
 @app.post("/api/chat", response_model=ChatResponse)
-async def handle_chat(request: ChatRequest) -> ChatResponse:
+async def chat(request: ChatRequest):
     try:
-        print(f"Processing request: {request}")
+        print(f"Received chat request: {request}")
         
-        # Create request context with session_id
-        request_context = {
+        # Process request through master agent
+        response = await master_agent.process_request({
             'message': request.message,
             'session_id': request.session_id
-        }
-        
-        try:
-            # Process request through master agent
-            agent_response = await master_agent.process_request(request_context)
-            print(f"Raw agent response: {agent_response}")  # Debug log
-            
-            # Extract involved agents
-            involved_agents = agent_response.get('metadata', {}).get('involved_agents', ['master_agent'])
-            if isinstance(involved_agents, str):
-                involved_agents = [involved_agents]
-            
-            # Get response message
-            response_message = agent_response.get('message', '')
-            if not response_message and 'response' in agent_response:
-                response_message = agent_response['response']
-            
-            # Extract and format thought process
-            raw_thoughts = agent_response.get('metadata', {}).get('thought_process', [])
-            if isinstance(raw_thoughts, list):
-                formatted_thoughts = [format_thought(thought) for thought in raw_thoughts]
-            else:
-                formatted_thoughts = [format_thought(raw_thoughts)]
-            
-            # Create response with validation
-            data = ChatData(
+        })
+
+        print(f"Master agent response: {response}")
+
+        # Extract involved agents
+        involved_agents = response.get('metadata', {}).get('involved_agents', ['master_agent'])
+        if isinstance(involved_agents, str):
+            involved_agents = [involved_agents]
+
+        # Get response message
+        response_message = response.get('message', '')
+        if not response_message and 'response' in response:
+            response_message = response['response']
+
+        # Extract thought process
+        thought_process = response.get('metadata', {}).get('thought_process', [])
+        if not isinstance(thought_process, list):
+            thought_process = [str(thought_process)]
+
+        return ChatResponse(
+            status="success",
+            data=ChatData(
                 response=response_message,
                 metadata=ChatMetadata(
-                    thought_process=formatted_thoughts,
+                    thought_process=thought_process,
                     involved_agents=involved_agents
                 )
             )
-            
-            response = ChatResponse(
-                status="success",
-                data=data
-            )
-            
-            print(f"Sending response: {response.dict()}")
-            return response
-            
-        except Exception as e:
-            print(f"Error processing request: {str(e)}")
-            raise HTTPException(status_code=500, detail=str(e))
-        
+        )
     except Exception as e:
-        print(f"Error in handle_chat: {str(e)}")
+        print(f"Error in chat endpoint: {str(e)}")
         return ChatResponse(
             status="error",
             error=str(e)
         )
 
-# Graceful shutdown handler
-async def shutdown():
-    print("Shutting down server...")
-    print("Server shutdown complete.")
-
-@app.on_event("shutdown")
-async def shutdown_event():
-    await shutdown()
-
-# Signal handlers
-def handle_sigterm(signum, frame):
-    print("Received SIGTERM signal")
-    asyncio.create_task(shutdown())
-
-def handle_sigint(signum, frame):
-    print("Received SIGINT signal")
-    asyncio.create_task(shutdown())
-
-# Gradio interface
-def create_gradio_interface():
-    with gr.Blocks() as demo:
-        chatbot = gr.Chatbot(type='messages')
-        msg = gr.Textbox()
-        clear = gr.Button("Clear")
-
-        async def respond(message, chat_history):
-            try:
-                # Create a session ID for Gradio interface
-                session_id = f"gradio_{len(chat_history)}"
-                request_context = {
-                    'message': message,
-                    'session_id': session_id
-                }
-                
-                # Process request through master agent
-                response = await master_agent.process_request(request_context)
-                chat_history.append((message, response['message']))
-                return "", chat_history
-            except Exception as e:
-                return "", chat_history + [(message, f"Error: {str(e)}")]
-
-        msg.submit(respond, [msg, chatbot], [msg, chatbot])
-        clear.click(lambda: None, None, chatbot, queue=False)
-
-    return demo
+def run_server():
+    """Run the FastAPI server."""
+    port = int(os.getenv('PORT', 80))
+    uvicorn.run(app, host="0.0.0.0", port=port, log_level="debug")
 
 if __name__ == "__main__":
     try:
-        demo = create_gradio_interface()
-        app = gr.mount_gradio_app(app, demo, path="/gradio")
-        print(f"Starting server on port {port}")
-        uvicorn.run(app, host="0.0.0.0", port=port, log_level="debug")
+        run_server()
     except KeyboardInterrupt:
-        print("Received KeyboardInterrupt, initiating graceful shutdown...")
-        asyncio.run(shutdown())
+        print("Received KeyboardInterrupt, shutting down...")
     except Exception as e:
         print(f"Server error: {str(e)}")
-        asyncio.run(shutdown())
+        sys.exit(1)

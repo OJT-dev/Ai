@@ -1,1 +1,3 @@
-# This file makes the lifestyle_agent directory a Python package
+from .lifestyle_agent import LifestyleAgent
+
+__all__ = ['LifestyleAgent']

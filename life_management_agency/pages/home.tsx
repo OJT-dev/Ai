@@ -38,14 +38,14 @@ const HomePage: React.FC = () => (
           <MessageSquare className="text-green-400 w-6 h-6 mb-2" />
           <span>Chat</span>
         </Link>
-        <div className="bg-gray-800 p-4 rounded-lg flex flex-col items-center">
+        <Link href="/wellness" className="bg-gray-800 p-4 rounded-lg flex flex-col items-center">
           <Heart className="text-red-400 w-6 h-6 mb-2" />
           <span>Wellness</span>
-        </div>
-        <div className="bg-gray-800 p-4 rounded-lg flex flex-col items-center">
+        </Link>
+        <Link href="/schedule" className="bg-gray-800 p-4 rounded-lg flex flex-col items-center">
           <Calendar className="text-purple-400 w-6 h-6 mb-2" />
           <span>Schedule</span>
-        </div>
+        </Link>
       </div>
 
       {/* Active Agents */}
