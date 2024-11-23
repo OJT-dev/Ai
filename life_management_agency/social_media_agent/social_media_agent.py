@@ -1,6 +1,6 @@
 from agency_swarm import Agent
-from ..tools.SimpleCommunicationTool import SimpleCommunicationTool
-from .tools.PodcastAutopostTool import PodcastAutopostTool
+from tools.SimpleCommunicationTool import SimpleCommunicationTool
+from .tools import PodcastAutopostTool
 
 class SocialMediaAgent(Agent):
     def __init__(self):
@@ -37,3 +37,4 @@ class SocialMediaAgent(Agent):
     def generate_content(self, topic=None):
         """Generate original content"""
         content = self.podcast_tool.generate_original_content(topic)
+        return content

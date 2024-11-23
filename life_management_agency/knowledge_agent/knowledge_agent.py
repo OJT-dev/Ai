@@ -1,6 +1,6 @@
 from agency_swarm import Agent
-from .tools.TavilySearchTool import TavilySearchTool
-from ..tools.SimpleCommunicationTool import SimpleCommunicationTool
+from knowledge_agent.tools.TavilySearchTool import TavilySearchTool
+from tools.SimpleCommunicationTool import SimpleCommunicationTool
 
 class KnowledgeAgent(Agent):
     def __init__(self):

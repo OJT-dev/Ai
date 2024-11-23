@@ -158,7 +158,7 @@ const ChatPage: NextPage = () => {
 
   return (
     <ErrorBoundary>
-      <main className="flex h-screen bg-background" role="main">
+      <div className="flex h-screen bg-background overflow-hidden">
         {/* Sidebar */}
         <aside
           className={`
@@ -216,7 +216,7 @@ const ChatPage: NextPage = () => {
         </aside>
 
         {/* Main Content */}
-        <div className="flex-1 flex flex-col md:ml-[240px] relative">
+        <div className="flex-1 flex flex-col md:ml-[240px] min-h-full">
           {/* Mobile Sidebar Toggle */}
           <Button
             variant="ghost"
@@ -247,6 +247,7 @@ const ChatPage: NextPage = () => {
 
           <div 
             className="flex-1 overflow-y-auto px-4 py-6" 
+            style={{ paddingBottom: "calc(160px + 56px)" }}
             role="log" 
             aria-label="Chat messages"
             aria-live="polite"
@@ -326,7 +327,7 @@ const ChatPage: NextPage = () => {
           </div>
 
           {/* Input Area */}
-          <div className="border-t bg-background/80 backdrop-blur-sm">
+          <div className="absolute bottom-14 left-0 right-0 md:left-[240px] border-t bg-background">
             <div className="max-w-3xl mx-auto p-4">
               <form 
                 onSubmit={(e) => {
@@ -444,7 +445,7 @@ const ChatPage: NextPage = () => {
             aria-hidden="true"
           />
         )}
-      </main>
+      </div>
     </ErrorBoundary>
   );
 };

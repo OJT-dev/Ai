@@ -10,15 +10,16 @@ import gradio as gr
 from pydantic import BaseModel, Field, validator
 from typing import Optional, List, Dict, Any, Union
 import json
+import sys
 
 # Import agents
-from life_management_agency.master_agent.master_agent import MasterAgent
-from life_management_agency.knowledge_agent.knowledge_agent import KnowledgeAgent
-from life_management_agency.health_agent.health_agent import HealthAgent
-from life_management_agency.lifestyle_agent.lifestyle_agent import LifestyleAgent
-from life_management_agency.social_media_agent.social_media_agent import SocialMediaAgent
-from life_management_agency.personal_coach_agent.personal_coach_agent import PersonalCoachAgent
-from life_management_agency.family_coach_agent.family_coach_agent import FamilyCoachAgent
+from master_agent.master_agent import MasterAgent
+from knowledge_agent.knowledge_agent import KnowledgeAgent
+from health_agent.health_agent import HealthAgent
+from lifestyle_agent.lifestyle_agent import LifestyleAgent
+from social_media_agent.social_media_agent import SocialMediaAgent
+from personal_coach_agent.personal_coach_agent import PersonalCoachAgent
+from family_coach_agent.family_coach_agent import FamilyCoachAgent
 
 # Load environment variables
 load_dotenv()
@@ -131,7 +132,7 @@ async def chat(request: ChatRequest):
 
 def run_server():
     """Run the FastAPI server."""
-    port = int(os.getenv('PORT', 80))
+    port = int(os.getenv('PORT', 8000))  # Changed default port to 8000
     uvicorn.run(app, host="0.0.0.0", port=port, log_level="debug")
 
 if __name__ == "__main__":

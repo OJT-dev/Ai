@@ -1,6 +1,6 @@
 from agency_swarm import Agent
-from ..tools.SimpleCommunicationTool import SimpleCommunicationTool
-from ..tools.AgentCoordinationTool import AgentCoordinationTool
+from tools.SimpleCommunicationTool import SimpleCommunicationTool
+from tools.AgentCoordinationTool import AgentCoordinationTool
 import asyncio
 from typing import Dict, Any, List, Union
 

@@ -2,7 +2,7 @@ import json
 import argparse
 from datetime import datetime, timedelta
 from agency_swarm import Agent
-from life_management_agency.tools.SimpleCommunicationTool import SimpleCommunicationTool
+from tools.SimpleCommunicationTool import SimpleCommunicationTool
 
 class LifestyleAgent(Agent):
     def __init__(self):

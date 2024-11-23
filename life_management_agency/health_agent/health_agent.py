@@ -3,9 +3,9 @@ import argparse
 import os
 from datetime import datetime
 from agency_swarm import Agent
-from life_management_agency.health_agent.tools.FitnessTrackerTool import FitnessTrackerTool
-from life_management_agency.health_agent.tools.MemoryTool import MemoryTool
-from life_management_agency.tools.SimpleCommunicationTool import SimpleCommunicationTool
+from .tools.FitnessTrackerTool import FitnessTrackerTool
+from .tools.MemoryTool import MemoryTool
+from tools.SimpleCommunicationTool import SimpleCommunicationTool
 
 class HealthAgent(Agent):
     def __init__(self):
