@@ -1,34 +1,57 @@
-import React from 'react';
-import { useRouter } from 'next/router';
-import { Sparkles } from 'lucide-react';
+import type { NextPage } from 'next'
+import { useSession, signIn } from 'next-auth/react'
+import { useRouter } from 'next/router'
+import { useEffect } from 'react'
 
-const WelcomePage: React.FC = () => {
-  const router = useRouter();
+const Home: NextPage = () => {
+  const { data: session, status } = useSession()
+  const router = useRouter()
+
+  useEffect(() => {
+    if (session) {
+      router.push('/home')
+    }
+  }, [session, router])
 
   const handleGetStarted = () => {
-    router.push('/home');
-  };
+    if (session) {
+      router.push('/home')
+    } else {
+      signIn('github')
+    }
+  }
 
   return (
-    <div className="h-screen bg-gradient-to-b from-blue-600 to-blue-800 p-6 flex flex-col items-center justify-center text-white">
-      <div className="w-24 h-24 bg-white/20 rounded-full flex items-center justify-center mb-8">
-        <Sparkles className="w-12 h-12" />
-      </div>
-      <h1 className="text-3xl font-bold mb-4">Welcome to Life AI</h1>
-      <p className="text-center mb-8">Your personal AI companion for growth and wellness</p>
-      <div className="w-full space-y-4">
-        <button 
-          className="w-full bg-white text-blue-600 py-3 rounded-lg font-semibold"
-          onClick={handleGetStarted}
-        >
-          Get Started
-        </button>
-        <button className="w-full bg-white/20 py-3 rounded-lg font-semibold">
-          Log In
-        </button>
+    <div className="min-h-screen bg-gradient-to-br from-blue-500 via-purple-500 to-pink-500 flex items-center justify-center p-6">
+      <div className="max-w-3xl w-full space-y-8 text-center">
+        <div className="w-24 h-24 mx-auto rounded-full bg-white/20 flex items-center justify-center">
+          <span className="text-4xl">✨</span>
+        </div>
+        
+        <h1 className="text-6xl font-bold text-white tracking-tight">
+          Welcome to Life AI
+        </h1>
+        
+        <p className="text-xl text-white/90 max-w-2xl mx-auto">
+          Your personal AI companion for growth, wellness, and life management. Experience the future of personal development.
+        </p>
+        
+        <div className="space-y-4 pt-8">
+          <button 
+            onClick={handleGetStarted}
+            className="bg-white text-purple-600 px-8 py-4 rounded-lg font-semibold text-lg hover:bg-opacity-90 transition-all"
+          >
+            {status === 'loading' ? 'Loading...' : 'Get Started'}
+          </button>
+          
+          <div className="flex items-center justify-center space-x-2 text-white/80">
+            <div className="w-2 h-2 bg-green-400 rounded-full"></div>
+            <span>System Status: Online</span>
+          </div>
+        </div>
       </div>
     </div>
-  );
-};
+  )
+}
 
-export default WelcomePage;
+export default Home

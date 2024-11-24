@@ -1,0 +1,35 @@
+# OpenAI API Configuration
+OPENAI_API_KEY=your_openai_api_key_here
+
+# Authentication Configuration
+NEXTAUTH_URL=http://localhost:3000
+NEXTAUTH_SECRET=your_nextauth_secret_here  # Generate with: openssl rand -base64 32
+
+# Database Configuration (if needed)
+DATABASE_URL=your_database_url_here
+
+# Server Configuration
+PORT=8002
+HOST=127.0.0.1
+
+# Agent Configuration
+MASTER_AGENT_MODEL=gpt-4
+KNOWLEDGE_AGENT_MODEL=gpt-4
+HEALTH_AGENT_MODEL=gpt-4
+LIFESTYLE_AGENT_MODEL=gpt-4
+PERSONAL_COACH_AGENT_MODEL=gpt-4
+FAMILY_COACH_AGENT_MODEL=gpt-4
+SOCIAL_MEDIA_AGENT_MODEL=gpt-4
+
+# Development Settings
+NODE_ENV=development
+DEBUG=true
+
+# Optional: OAuth Providers (if using social login)
+# GitHub
+GITHUB_ID=your_github_client_id
+GITHUB_SECRET=your_github_client_secret
+
+# Google
+GOOGLE_ID=your_google_client_id
+GOOGLE_SECRET=your_google_client_secret

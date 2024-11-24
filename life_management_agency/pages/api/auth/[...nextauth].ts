@@ -1,13 +1,11 @@
+import NextAuth from 'next-auth'
+import GithubProvider from 'next-auth/providers/github'
 
-import NextAuth from "next-auth"
-import GithubProvider from "next-auth/providers/github"
-import { NextAuthOptions } from "next-auth"
-
-export const authOptions: NextAuthOptions = {
+export default NextAuth({
   providers: [
     GithubProvider({
-      clientId: process.env.GITHUB_ID || "",
-      clientSecret: process.env.GITHUB_SECRET || "",
+      clientId: process.env.GITHUB_ID!,
+      clientSecret: process.env.GITHUB_SECRET!,
     }),
   ],
   pages: {
@@ -16,17 +14,14 @@ export const authOptions: NextAuthOptions = {
     error: '/auth/error',
   },
   callbacks: {
-    async session({ session, token }) {
+    async session({ session, token, user }) {
       return session
     },
-    async jwt({ token, user }) {
+    async jwt({ token, user, account, profile }) {
       if (user) {
         token.id = user.id
       }
       return token
     },
   },
-  secret: process.env.NEXTAUTH_SECRET,
-}
-
-export default NextAuth(authOptions)
+})

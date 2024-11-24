@@ -1,75 +1,122 @@
 from dotenv import load_dotenv
 from agency_swarm import Agency
 import os
-from fastapi import FastAPI, HTTPException, Request
-from fastapi.middleware.cors import CORSMiddleware
-from fastapi.responses import JSONResponse
-import uvicorn
-import asyncio
-import gradio as gr
-from pydantic import BaseModel, Field, validator
-from typing import Optional, List, Dict, Any, Union
 import json
 import sys
+import asyncio
+from typing import Dict, Any
+from fastapi import FastAPI, HTTPException
+from fastapi.middleware.cors import CORSMiddleware
+import uvicorn
+from pydantic import BaseModel
 
-# Import agents
-from master_agent.master_agent import MasterAgent
-from knowledge_agent.knowledge_agent import KnowledgeAgent
-from health_agent.health_agent import HealthAgent
-from lifestyle_agent.lifestyle_agent import LifestyleAgent
-from social_media_agent.social_media_agent import SocialMediaAgent
-from personal_coach_agent.personal_coach_agent import PersonalCoachAgent
-from family_coach_agent.family_coach_agent import FamilyCoachAgent
+# Import agents using absolute imports
+from life_management_agency.master_agent.master_agent import MasterAgent
+from life_management_agency.knowledge_agent.knowledge_agent import KnowledgeAgent
+from life_management_agency.health_agent.health_agent import HealthAgent
+from life_management_agency.lifestyle_agent.lifestyle_agent import LifestyleAgent
+from life_management_agency.social_media_agent.social_media_agent import SocialMediaAgent
+from life_management_agency.personal_coach_agent.personal_coach_agent import PersonalCoachAgent
+from life_management_agency.family_coach_agent.family_coach_agent import FamilyCoachAgent
 
 # Load environment variables
 load_dotenv()
 
-# Request/Response models
 class ChatRequest(BaseModel):
     message: str
-    session_id: Optional[str] = None
-    type: str = "chat"
+    user: str = "user"
 
-class ChatMetadata(BaseModel):
-    thought_process: List[str] = Field(default_factory=list)
-    involved_agents: List[str] = Field(default_factory=list)
+class LifeManagementAgency:
+    def __init__(self):
+        # Initialize all agents
+        self.master_agent = MasterAgent()
+        self.knowledge_agent = KnowledgeAgent()
+        self.health_agent = HealthAgent()
+        self.lifestyle_agent = LifestyleAgent()
+        self.social_media_agent = SocialMediaAgent()
+        self.personal_coach_agent = PersonalCoachAgent()
+        self.family_coach_agent = FamilyCoachAgent()
 
-class ChatData(BaseModel):
-    response: str
-    metadata: Optional[ChatMetadata] = None
+        # Create a dictionary of all agents
+        self.agents = {
+            'master_agent': self.master_agent,
+            'knowledge_agent': self.knowledge_agent,
+            'health_agent': self.health_agent,
+            'lifestyle_agent': self.lifestyle_agent,
+            'social_media_agent': self.social_media_agent,
+            'personal_coach_agent': self.personal_coach_agent,
+            'family_coach_agent': self.family_coach_agent
+        }
 
-class ChatResponse(BaseModel):
-    status: str = "success"
-    data: Optional[ChatData] = None
-    error: Optional[str] = None
+        # Create agent connections list
+        agent_connections = [
+            self.master_agent,
+            [self.master_agent, self.knowledge_agent],
+            [self.master_agent, self.health_agent],
+            [self.master_agent, self.lifestyle_agent],
+            [self.master_agent, self.social_media_agent],
+            [self.master_agent, self.personal_coach_agent],
+            [self.master_agent, self.family_coach_agent],
+            [self.knowledge_agent, self.health_agent],
+            [self.knowledge_agent, self.lifestyle_agent],
+            [self.health_agent, self.lifestyle_agent],
+            [self.personal_coach_agent, self.lifestyle_agent],
+            [self.personal_coach_agent, self.family_coach_agent],
+            [self.family_coach_agent, self.lifestyle_agent]
+        ]
 
-# Initialize agents
-master_agent = MasterAgent()
-knowledge_agent = KnowledgeAgent()
-health_agent = HealthAgent()
-lifestyle_agent = LifestyleAgent()
-social_media_agent = SocialMediaAgent()
-personal_coach_agent = PersonalCoachAgent()
-family_coach_agent = FamilyCoachAgent()
+        # Initialize Agency Swarm
+        self.agency = Agency(agent_connections, shared_instructions='agency_manifesto.md')
 
-# Initialize Agency Swarm
-agency = Agency([
-    master_agent,
-    [master_agent, knowledge_agent],
-    [master_agent, health_agent],
-    [master_agent, lifestyle_agent],
-    [master_agent, social_media_agent],
-    [master_agent, personal_coach_agent],
-    [master_agent, family_coach_agent],
-    [knowledge_agent, health_agent],
-    [knowledge_agent, lifestyle_agent],
-    [health_agent, lifestyle_agent],
-    [personal_coach_agent, lifestyle_agent],
-    [personal_coach_agent, family_coach_agent],
-    [family_coach_agent, lifestyle_agent]
-], shared_instructions='agency_manifesto.md')
+        # Set agency reference for each agent
+        for agent in self.agents.values():
+            agent.set_agency(self)
 
-# Initialize FastAPI
+    async def process_message(self, message: str, user: str) -> Dict[str, Any]:
+        try:
+            # Process request through master agent
+            response = await self.master_agent.process_request({
+                'message': message,
+                'user': user,
+                'context': {
+                    'session_user': user,
+                    'timestamp': str(asyncio.get_event_loop().time())
+                }
+            })
+
+            # Extract metadata
+            involved_agents = response.get('metadata', {}).get('involved_agents', ['master_agent'])
+            if isinstance(involved_agents, str):
+                involved_agents = [involved_agents]
+
+            thought_process = response.get('metadata', {}).get('thought_process', [])
+            if not isinstance(thought_process, list):
+                thought_process = [str(thought_process)]
+
+            # Get response message
+            response_message = response.get('message', '')
+            if not response_message and 'response' in response:
+                response_message = response['response']
+
+            return {
+                'message': response_message,
+                'metadata': {
+                    'involved_agents': involved_agents,
+                    'thought_process': thought_process
+                }
+            }
+
+        except Exception as e:
+            print(f"Error processing message: {str(e)}", file=sys.stderr)
+            return {
+                'message': "I apologize, but I encountered an error processing your request. Please try again.",
+                'metadata': {
+                    'involved_agents': ['error_handler'],
+                    'thought_process': [str(e)]
+                }
+            }
+
+# Initialize FastAPI app
 app = FastAPI()
 
 # Configure CORS
@@ -81,65 +128,31 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-@app.options("/api/chat")
-async def chat_options():
-    return {"message": "OK"}
+# Initialize agency
+agency = None
 
-@app.post("/api/chat", response_model=ChatResponse)
+@app.on_event("startup")
+async def startup_event():
+    global agency
+    agency = LifeManagementAgency()
+
+@app.post("/chat")
 async def chat(request: ChatRequest):
     try:
-        print(f"Received chat request: {request}")
-        
-        # Process request through master agent
-        response = await master_agent.process_request({
-            'message': request.message,
-            'session_id': request.session_id
-        })
-
-        print(f"Master agent response: {response}")
-
-        # Extract involved agents
-        involved_agents = response.get('metadata', {}).get('involved_agents', ['master_agent'])
-        if isinstance(involved_agents, str):
-            involved_agents = [involved_agents]
-
-        # Get response message
-        response_message = response.get('message', '')
-        if not response_message and 'response' in response:
-            response_message = response['response']
-
-        # Extract thought process
-        thought_process = response.get('metadata', {}).get('thought_process', [])
-        if not isinstance(thought_process, list):
-            thought_process = [str(thought_process)]
-
-        return ChatResponse(
-            status="success",
-            data=ChatData(
-                response=response_message,
-                metadata=ChatMetadata(
-                    thought_process=thought_process,
-                    involved_agents=involved_agents
-                )
-            )
-        )
+        if agency is None:
+            raise HTTPException(status_code=500, detail="Agency not initialized")
+        response = await agency.process_message(request.message, request.user)
+        return response
     except Exception as e:
-        print(f"Error in chat endpoint: {str(e)}")
-        return ChatResponse(
-            status="error",
-            error=str(e)
-        )
+        raise HTTPException(status_code=500, detail=str(e))
 
-def run_server():
-    """Run the FastAPI server."""
-    port = int(os.getenv('PORT', 8000))  # Changed default port to 8000
-    uvicorn.run(app, host="0.0.0.0", port=port, log_level="debug")
+def main():
+    if os.getenv('OPENAI_API_KEY') is None:
+        print("Error: OpenAI API key is not set. Please check your environment variables.")
+        sys.exit(1)
+    
+    print("Starting Life Management Agency server...")
+    uvicorn.run(app, host="127.0.0.1", port=8002)
 
 if __name__ == "__main__":
-    try:
-        run_server()
-    except KeyboardInterrupt:
-        print("Received KeyboardInterrupt, shutting down...")
-    except Exception as e:
-        print(f"Server error: {str(e)}")
-        sys.exit(1)
+    main()

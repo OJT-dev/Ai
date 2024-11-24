@@ -1,6 +1,7 @@
-from agency_swarm import Tool
+from agency_swarm.tools import BaseTool
+from typing import Dict, Any
 
-class PodcastAutopostTool(Tool):
+class PodcastAutopostTool(BaseTool):
     def __init__(self):
         super().__init__(
             name="PodcastAutopostTool",
@@ -8,6 +9,15 @@ class PodcastAutopostTool(Tool):
             parameters=[],
             required_parameters=[]
         )
+
+    async def run(self, *args, **kwargs) -> Dict[str, Any]:
+        """Required implementation of the abstract run method"""
+        # This method will handle the main logic of the tool
+        # For now, we'll return a mock response
+        return {
+            "status": "success",
+            "message": "Podcast tool operation completed"
+        }
 
     def get_latest_episode(self):
         """Get the latest podcast episode details"""

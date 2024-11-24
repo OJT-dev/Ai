@@ -1,92 +1,191 @@
-import json
-import argparse
-from datetime import datetime, timedelta
-from agency_swarm import Agent
-from tools.SimpleCommunicationTool import SimpleCommunicationTool
+from typing import Dict, Any, List
+from ..base_agent import BaseAgent
 
-class LifestyleAgent(Agent):
+class LifestyleAgent(BaseAgent):
     def __init__(self):
+        expertise = [
+            "Daily routine optimization",
+            "Habit formation and tracking",
+            "Time management",
+            "Productivity enhancement",
+            "Work-life balance",
+            "Goal setting and achievement",
+            "Personal organization",
+            "Lifestyle design",
+            "Energy management",
+            "Environmental optimization"
+        ]
+        
         super().__init__(
-            name="Lifestyle Agent",
-            description="Manages schedule, tasks, and lifestyle optimization.",
-            instructions="./instructions.md",
-            tools=[SimpleCommunicationTool],
-            temperature=0.3,
-            max_prompt_tokens=25000,
-            model="gpt-4"
+            name="lifestyle_agent",
+            description="Specialized agent for lifestyle optimization and habit management",
+            expertise=expertise
         )
 
-    def get_schedule(self):
-        """Get schedule data including tasks, events, and productivity metrics"""
+    def _get_system_prompt(self) -> str:
+        return """
+        You are a specialized lifestyle and habit management AI agent. Your role is to help users 
+        optimize their daily routines and develop positive habits. Always:
+
+        1. Consider the user's current lifestyle and constraints
+        2. Recommend sustainable changes and improvements
+        3. Focus on habit formation and behavior change
+        4. Promote work-life balance
+        5. Suggest practical time management strategies
+        6. Help set and track meaningful goals
+        7. Consider energy management throughout the day
+        8. Integrate with health and knowledge recommendations
+        9. Encourage environmental optimization
+        10. Support personal growth and development
+
+        Areas of focus:
+        - Daily routine optimization
+        - Habit formation and tracking
+        - Time management
+        - Work-life balance
+        - Goal setting and achievement
+        - Personal organization
+        - Energy management
+        - Environmental design
+        - Productivity enhancement
+        - Lifestyle design
+        """
+
+    async def process_request(self, request: Dict[str, Any]) -> Dict[str, Any]:
         try:
-            schedule_data = {
-                "tasks": self.get_daily_tasks(),
-                "events": self.get_upcoming_events(),
-                "productivity": self.get_productivity_metrics()
-            }
-            return json.dumps(schedule_data)
-        except Exception as e:
-            return json.dumps({
-                "error": f"Failed to get schedule: {str(e)}"
+            # Validate and preprocess request
+            if not await self.validate_request(request):
+                return {
+                    'message': "Invalid request format. Please provide a message.",
+                    'metadata': {'error': 'Invalid request'}
+                }
+
+            request = await self.preprocess_request(request)
+            message = request['message']
+            context = request.get('context', {})
+
+            # Add lifestyle-specific context processing
+            lifestyle_context = self._extract_lifestyle_context(message)
+            context.update(lifestyle_context)
+
+            # Process with base implementation
+            response = await super().process_request({
+                'message': message,
+                'context': context
             })
 
-    def get_daily_tasks(self):
-        """Get AI-prioritized daily tasks"""
-        # This would normally use AI to prioritize tasks based on user data
-        return [
-            {
-                "id": "1",
-                "title": "Morning Routine",
-                "description": "AI-optimized morning routine for peak productivity",
-                "priority": 1,
-                "dueDate": datetime.now().isoformat(),
-                "status": "pending"
-            },
-            {
-                "id": "2",
-                "title": "Team Meeting",
-                "description": "Weekly sync with development team",
-                "priority": 2,
-                "dueDate": (datetime.now() + timedelta(hours=2)).isoformat(),
-                "status": "pending"
-            }
-        ]
+            # Add lifestyle-specific metadata
+            response['metadata'].update({
+                'lifestyle_areas': self._identify_lifestyle_areas(message),
+                'habit_recommendations': self._generate_habit_recommendations(message),
+                'routine_optimizations': self._suggest_routine_optimizations(message)
+            })
 
-    def get_upcoming_events(self):
-        """Get upcoming calendar events"""
-        # This would normally fetch from calendar integration
-        return [
-            {
-                "id": "1",
-                "title": "Focus Time",
-                "startTime": "09:00",
-                "endTime": "11:00",
-                "type": "productivity"
-            }
-        ]
+            return response
 
-    def get_productivity_metrics(self):
-        """Get productivity analytics"""
-        # This would normally calculate from actual user data
-        return {
-            "focusTime": 120,  # minutes
-            "tasksCompleted": 5,
-            "efficiency": 0.85
+        except Exception as e:
+            return await self.handle_error(e)
+
+    def _extract_lifestyle_context(self, message: str) -> Dict[str, Any]:
+        """Extract lifestyle-related context from the message."""
+        context = {
+            'routine_related': any(word in message.lower() for word in ['routine', 'schedule', 'daily', 'habit']),
+            'productivity_related': any(word in message.lower() for word in ['productivity', 'efficient', 'focus', 'work']),
+            'balance_related': any(word in message.lower() for word in ['balance', 'stress', 'overwhelm', 'time']),
+            'environment_related': any(word in message.lower() for word in ['environment', 'space', 'organize', 'setup']),
+        }
+        return {'lifestyle_context': context}
+
+    def _identify_lifestyle_areas(self, message: str) -> List[str]:
+        """Identify relevant lifestyle areas from the message."""
+        lifestyle_areas = []
+        keywords = {
+            'routine': ['routine', 'schedule', 'daily', 'habit'],
+            'productivity': ['productivity', 'efficient', 'focus', 'work'],
+            'balance': ['balance', 'stress', 'overwhelm', 'time'],
+            'environment': ['environment', 'space', 'organize', 'setup'],
+            'goals': ['goal', 'achieve', 'target', 'objective']
         }
 
-def main():
-    parser = argparse.ArgumentParser(description='Lifestyle Agent CLI')
-    parser.add_argument('--action', type=str, required=True, help='Action to perform')
-    args = parser.parse_args()
+        for area, words in keywords.items():
+            if any(word in message.lower() for word in words):
+                lifestyle_areas.append(area)
 
-    agent = LifestyleAgent()
+        return lifestyle_areas
 
-    if args.action == 'get_schedule':
-        print(agent.get_schedule())
-    else:
-        print(json.dumps({
-            "error": f"Unknown action: {args.action}"
-        }))
+    def _generate_habit_recommendations(self, message: str) -> List[str]:
+        """Generate relevant habit recommendations based on the message."""
+        recommendations = []
+        lifestyle_areas = self._identify_lifestyle_areas(message)
 
-if __name__ == "__main__":
-    main()
+        recommendation_map = {
+            'routine': [
+                "Start with a morning routine",
+                "Create evening wind-down habits",
+                "Build consistency with daily rituals"
+            ],
+            'productivity': [
+                "Use time-blocking technique",
+                "Implement the 2-minute rule",
+                "Practice regular breaks (Pomodoro)"
+            ],
+            'balance': [
+                "Set work-life boundaries",
+                "Schedule regular downtime",
+                "Practice stress-relief activities"
+            ],
+            'environment': [
+                "Organize workspace daily",
+                "Create dedicated activity zones",
+                "Minimize digital distractions"
+            ],
+            'goals': [
+                "Set SMART goals",
+                "Track progress daily",
+                "Celebrate small wins"
+            ]
+        }
+
+        for area in lifestyle_areas:
+            if area in recommendation_map:
+                recommendations.extend(recommendation_map[area])
+
+        return recommendations[:3]  # Return top 3 most relevant recommendations
+
+    def _suggest_routine_optimizations(self, message: str) -> List[Dict[str, Any]]:
+        """Suggest optimizations for daily routines."""
+        optimizations = []
+        lifestyle_areas = self._identify_lifestyle_areas(message)
+
+        optimization_templates = {
+            'routine': {
+                'time': 'morning',
+                'activity': 'Plan your day',
+                'duration': '10 minutes',
+                'benefit': 'Increased clarity and focus'
+            },
+            'productivity': {
+                'time': 'throughout day',
+                'activity': 'Regular breaks',
+                'duration': '5 minutes per hour',
+                'benefit': 'Maintained energy and focus'
+            },
+            'balance': {
+                'time': 'evening',
+                'activity': 'Digital sunset',
+                'duration': '1 hour before bed',
+                'benefit': 'Better sleep and recovery'
+            },
+            'environment': {
+                'time': 'start/end of day',
+                'activity': '5-minute cleanup',
+                'duration': '5 minutes',
+                'benefit': 'Organized space and clear mind'
+            }
+        }
+
+        for area in lifestyle_areas:
+            if area in optimization_templates:
+                optimizations.append(optimization_templates[area])
+
+        return optimizations

@@ -1,21 +1,17 @@
 import type { NextApiRequest, NextApiResponse } from 'next'
-import { spawn } from 'child_process'
-import path from 'path'
+import { getSession } from 'next-auth/react'
 
 type ChatResponse = {
   status: string
   data?: {
     response: string
     metadata?: {
-      thought_process?: string[]
-      involved_agents?: string[]
-      messageType?: string
+      thought_process: string[]
+      involved_agents: string[]
     }
   }
   error?: string
 }
-
-const backendUrl = 'http://localhost:80/api/chat';
 
 export default async function handler(
   req: NextApiRequest,
@@ -26,53 +22,58 @@ export default async function handler(
   }
 
   try {
-    const { message, messageType = 'chat' } = req.body
-    console.log('Received message:', message, 'Type:', messageType)
+    // Make authentication optional in development
+    const session = await getSession({ req })
+    const isDevelopment = process.env.NODE_ENV === 'development'
+    
+    if (!session && !isDevelopment) {
+      return res.status(401).json({ status: 'error', error: 'Unauthorized' })
+    }
 
-    // Get session ID from cookies or create new one
-    let sessionId = req.cookies.chatSessionId || `session_${Date.now()}`
-    res.setHeader('Set-Cookie', `chatSessionId=${sessionId}; Path=/; HttpOnly; SameSite=Strict; Max-Age=86400`)
+    const { message } = req.body
+    if (!message) {
+      return res.status(400).json({ status: 'error', error: 'Message is required' })
+    }
 
-    // Forward request to Python backend
-    const response = await fetch(backendUrl, {
+    // Forward request to Python FastAPI server
+    const response = await fetch('http://localhost:8002/chat', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({
         message,
-        session_id: sessionId,
-        type: messageType // Forward message type to backend
-      }),
-    });
+        user: session?.user?.name || 'user'
+      })
+    })
 
     if (!response.ok) {
-      throw new Error(`Backend responded with status: ${response.status}`);
+      const error = await response.text()
+      throw new Error(error)
     }
 
-    const data = await response.json();
-
-    // Set CORS headers
-    res.setHeader('Access-Control-Allow-Origin', '*')
-    res.setHeader('Access-Control-Allow-Methods', 'GET, POST, OPTIONS')
-    res.setHeader('Access-Control-Allow-Headers', 'Content-Type')
+    const data = await response.json()
 
     return res.status(200).json({
       status: 'success',
       data: {
-        response: data.data?.response || data.message,
-        metadata: {
-          thought_process: data.data?.metadata?.thought_process || [],
-          involved_agents: data.data?.metadata?.involved_agents || [],
-          messageType: messageType // Include message type in response
-        }
+        response: data.message,
+        metadata: data.metadata
       }
     })
   } catch (error) {
-    console.error('Chat API error:', error)
-    return res.status(500).json({ 
-      status: 'error', 
-      error: error instanceof Error ? error.message : 'Failed to communicate with AI agents'
+    console.error('Error processing chat request:', error)
+    return res.status(500).json({
+      status: 'error',
+      error: 'Failed to process message'
     })
   }
+}
+
+export const config = {
+  api: {
+    bodyParser: {
+      sizeLimit: '1mb',
+    },
+  },
 }

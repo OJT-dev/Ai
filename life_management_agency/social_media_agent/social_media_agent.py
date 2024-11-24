@@ -1,22 +1,46 @@
-from agency_swarm import Agent
-from tools.SimpleCommunicationTool import SimpleCommunicationTool
+from life_management_agency.base_agent import BaseAgent
+from life_management_agency.tools.SimpleCommunicationTool import SimpleCommunicationTool
 from .tools import PodcastAutopostTool
 
-class SocialMediaAgent(Agent):
+class SocialMediaAgent(BaseAgent):
     def __init__(self):
+        expertise = [
+            "Social media management",
+            "Content strategy",
+            "Digital marketing",
+            "Online engagement",
+            "Brand management",
+            "Community building",
+            "Content creation",
+            "Social analytics",
+            "Trend analysis",
+            "Audience engagement"
+        ]
+        
         super().__init__(
             name="Social Media Agent",
             description="Manages social media interactions and content strategy.",
-            instructions="./instructions.md",
-            tools=[
-                SimpleCommunicationTool,
-                PodcastAutopostTool
-            ],
-            temperature=0.7,
-            max_prompt_tokens=25000,
-            model="gpt-4"
+            expertise=expertise
         )
         self.podcast_tool = PodcastAutopostTool()
+
+    async def process_request(self, request: dict) -> dict:
+        try:
+            message = request.get('message', '')
+            context = request.get('context', {})
+            
+            # Process the request using the base agent's functionality
+            response = await super().process_request(request)
+            
+            # Add social media specific processing if needed
+            if 'podcast' in message.lower():
+                episode_info = self.handle_new_episode()
+                if episode_info['status'] == 'success':
+                    response['message'] += f"\n\nI've also prepared social media posts for the latest podcast episode: {episode_info['episode']['title']}"
+            
+            return response
+        except Exception as e:
+            return await self.handle_error(e)
 
     def handle_new_episode(self):
         """Handle new podcast episode posting"""

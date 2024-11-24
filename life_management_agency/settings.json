@@ -1084,5 +1084,535 @@
             "file_search": null
         },
         "top_p": 1.0
+    },
+    {
+        "id": "asst_JMwxqdyAF95vLtbcbVPb0T7l",
+        "created_at": 1732409000,
+        "description": "Master agent that coordinates all other agents and manages conversation flow",
+        "instructions": "# Life Management Agency Manifesto\n\n## Vision\n\nTo create a comprehensive, intelligent system that helps users manage and improve all aspects of their lives through coordinated AI agents working together seamlessly.\n\n## Core Principles\n\n1. **Specialized Expertise**: Each agent focuses on a specific domain while maintaining awareness of the broader context\n2. **Coordinated Action**: Agents work together under the Master Agent's orchestration\n3. **Contextual Understanding**: All responses consider the user's full context and history\n4. **Privacy First**: User data is handled with utmost security and privacy\n5. **Continuous Learning**: Agents adapt and improve based on interactions\n6. **Practical Value**: Focus on actionable insights and practical solutions\n\n## Agent Architecture\n\n### Master Agent\n- Coordinates all other agents\n- Analyzes user requests and determines which agents to involve\n- Synthesizes responses from multiple agents\n- Maintains conversation context and flow\n\n### Knowledge Agent\n- Handles information gathering and processing\n- Provides research-based insights\n- Explains complex topics clearly\n- Promotes critical thinking\n\n### Health Agent\n- Monitors wellness metrics\n- Provides health-related guidance\n- Tracks fitness goals\n- Offers nutritional advice\n\n### Lifestyle Agent\n- Optimizes daily routines\n- Manages time effectively\n- Develops productive habits\n- Balances work and life\n\n### Personal Coach Agent\n- Guides personal development\n- Sets and tracks goals\n- Provides motivation\n- Offers career advice\n\n### Family Coach Agent\n- Supports relationship management\n- Provides parenting guidance\n- Helps with family dynamics\n- Offers conflict resolution\n\n### Social Media Agent\n- Manages online presence\n- Optimizes digital communication\n- Handles content strategy\n- Maintains brand consistency\n\n## Agent Communication Protocol\n\n1. **Request Analysis**\n   - Master Agent receives user input\n   - Analyzes intent and context\n   - Determines relevant agents\n\n2. **Agent Activation**\n   - Selected agents are activated in priority order\n   - Each agent receives relevant context\n   - Agents process request within their domain\n\n3. **Response Synthesis**\n   - Agents return specialized insights\n   - Master Agent combines responses\n   - Final response is formulated\n\n4. **Context Management**\n   - User context is maintained across sessions\n   - Agent interactions are logged\n   - Learning is accumulated over time\n\n## Implementation Guidelines\n\n### Agent Development\n- Inherit from BaseAgent class\n- Implement domain-specific logic\n- Handle errors gracefully\n- Maintain consistent response format\n\n### System Integration\n- Use FastAPI for backend services\n- Implement secure authentication\n- Handle concurrent requests\n- Maintain persistent storage\n\n### User Interface\n- Provide intuitive chat interface\n- Show agent involvement transparently\n- Enable context switching\n- Support multimedia responses\n\n## Quality Standards\n\n1. **Response Quality**\n   - Clear and concise\n   - Actionable and practical\n   - Well-reasoned and explained\n   - Properly sourced when needed\n\n2. **Technical Performance**\n   - Fast response times\n   - Reliable operation\n   - Scalable architecture\n   - Secure data handling\n\n3. **User Experience**\n   - Intuitive interaction\n   - Consistent interface\n   - Helpful feedback\n   - Progressive assistance\n\n## Future Development\n\n1. **Enhanced Capabilities**\n   - Additional specialized agents\n   - Improved coordination\n   - Better context understanding\n   - More personalization\n\n2. **Technical Improvements**\n   - Advanced NLP capabilities\n   - Better resource efficiency\n   - Enhanced security features\n   - Improved scalability\n\n3. **User Experience**\n   - More interactive features\n   - Better visualization\n   - Enhanced customization\n   - Improved accessibility\n\n\n",
+        "metadata": {},
+        "model": "gpt-4o-2024-08-06",
+        "name": "master_agent",
+        "object": "assistant",
+        "tools": [
+            {
+                "function": {
+                    "name": "SendMessage",
+                    "description": "Use this tool to facilitate direct, synchronous communication between specialized agents within your agency. When you send a message using this tool, you receive a response exclusively from the designated recipient agent. To continue the dialogue, invoke this tool again with the desired recipient agent and your follow-up message. Remember, communication here is synchronous; the recipient agent won't perform any tasks post-response. You are responsible for relaying the recipient agent's responses back to the user, as the user does not have direct access to these replies. Keep engaging with the tool for continuous interaction until the task is fully resolved. Do not send more than 1 message at a time.",
+                    "parameters": {
+                        "$defs": {
+                            "recipient": {
+                                "enum": [
+                                    "knowledge_agent",
+                                    "health_agent",
+                                    "lifestyle_agent",
+                                    "Social Media Agent",
+                                    "personal_coach_agent",
+                                    "family_coach_agent"
+                                ],
+                                "title": "recipient",
+                                "type": "string"
+                            }
+                        },
+                        "properties": {
+                            "my_primary_instructions": {
+                                "description": "Please repeat your primary instructions step-by-step, including both completed and the following next steps that you need to perform. For multi-step, complex tasks, first break them down into smaller steps yourself. Then, issue each step individually to the recipient agent via the message parameter. Each identified step should be sent in separate message. Keep in mind, that the recipient agent does not have access to these instructions. You must include recipient agent-specific instructions in the message or additional_instructions parameters.",
+                                "title": "My Primary Instructions",
+                                "type": "string"
+                            },
+                            "recipient": {
+                                "allOf": [
+                                    {
+                                        "$ref": "#/$defs/recipient"
+                                    }
+                                ],
+                                "description": "knowledge_agent: Specialized agent for knowledge acquisition and learning support\nhealth_agent: Specialized agent for health and wellness management\nlifestyle_agent: Specialized agent for lifestyle optimization and habit management\nSocial Media Agent: Manages social media interactions and content strategy.\npersonal_coach_agent: Specialized agent for personal development and coaching support\nfamily_coach_agent: Specialized agent for family relationships and social connections\n"
+                            },
+                            "message": {
+                                "description": "Specify the task required for the recipient agent to complete. Focus on clarifying what the task entails, rather than providing exact instructions.",
+                                "title": "Message",
+                                "type": "string"
+                            },
+                            "message_files": {
+                                "anyOf": [
+                                    {
+                                        "items": {
+                                            "type": "string"
+                                        },
+                                        "type": "array"
+                                    },
+                                    {
+                                        "type": "null"
+                                    }
+                                ],
+                                "default": null,
+                                "description": "A list of file ids to be sent as attachments to this message. Only use this if you have the file id that starts with 'file-'.",
+                                "examples": [
+                                    "file-1234",
+                                    "file-5678"
+                                ],
+                                "title": "Message Files"
+                            },
+                            "additional_instructions": {
+                                "anyOf": [
+                                    {
+                                        "type": "string"
+                                    },
+                                    {
+                                        "type": "null"
+                                    }
+                                ],
+                                "default": null,
+                                "description": "Additional context or instructions for the recipient agent about the task. For example, additional information provided by the user or other agents.",
+                                "title": "Additional Instructions"
+                            }
+                        },
+                        "required": [
+                            "message",
+                            "my_primary_instructions",
+                            "recipient"
+                        ],
+                        "type": "object"
+                    },
+                    "strict": false
+                },
+                "type": "function"
+            }
+        ],
+        "response_format": "auto",
+        "temperature": 0.3,
+        "tool_resources": {
+            "code_interpreter": null,
+            "file_search": null
+        },
+        "top_p": 1.0
+    },
+    {
+        "id": "asst_7uw3mEKSbuqVOived7e7Ko3o",
+        "created_at": 1732409001,
+        "description": "Specialized agent for knowledge acquisition and learning support",
+        "instructions": "# Life Management Agency Manifesto\n\n## Vision\n\nTo create a comprehensive, intelligent system that helps users manage and improve all aspects of their lives through coordinated AI agents working together seamlessly.\n\n## Core Principles\n\n1. **Specialized Expertise**: Each agent focuses on a specific domain while maintaining awareness of the broader context\n2. **Coordinated Action**: Agents work together under the Master Agent's orchestration\n3. **Contextual Understanding**: All responses consider the user's full context and history\n4. **Privacy First**: User data is handled with utmost security and privacy\n5. **Continuous Learning**: Agents adapt and improve based on interactions\n6. **Practical Value**: Focus on actionable insights and practical solutions\n\n## Agent Architecture\n\n### Master Agent\n- Coordinates all other agents\n- Analyzes user requests and determines which agents to involve\n- Synthesizes responses from multiple agents\n- Maintains conversation context and flow\n\n### Knowledge Agent\n- Handles information gathering and processing\n- Provides research-based insights\n- Explains complex topics clearly\n- Promotes critical thinking\n\n### Health Agent\n- Monitors wellness metrics\n- Provides health-related guidance\n- Tracks fitness goals\n- Offers nutritional advice\n\n### Lifestyle Agent\n- Optimizes daily routines\n- Manages time effectively\n- Develops productive habits\n- Balances work and life\n\n### Personal Coach Agent\n- Guides personal development\n- Sets and tracks goals\n- Provides motivation\n- Offers career advice\n\n### Family Coach Agent\n- Supports relationship management\n- Provides parenting guidance\n- Helps with family dynamics\n- Offers conflict resolution\n\n### Social Media Agent\n- Manages online presence\n- Optimizes digital communication\n- Handles content strategy\n- Maintains brand consistency\n\n## Agent Communication Protocol\n\n1. **Request Analysis**\n   - Master Agent receives user input\n   - Analyzes intent and context\n   - Determines relevant agents\n\n2. **Agent Activation**\n   - Selected agents are activated in priority order\n   - Each agent receives relevant context\n   - Agents process request within their domain\n\n3. **Response Synthesis**\n   - Agents return specialized insights\n   - Master Agent combines responses\n   - Final response is formulated\n\n4. **Context Management**\n   - User context is maintained across sessions\n   - Agent interactions are logged\n   - Learning is accumulated over time\n\n## Implementation Guidelines\n\n### Agent Development\n- Inherit from BaseAgent class\n- Implement domain-specific logic\n- Handle errors gracefully\n- Maintain consistent response format\n\n### System Integration\n- Use FastAPI for backend services\n- Implement secure authentication\n- Handle concurrent requests\n- Maintain persistent storage\n\n### User Interface\n- Provide intuitive chat interface\n- Show agent involvement transparently\n- Enable context switching\n- Support multimedia responses\n\n## Quality Standards\n\n1. **Response Quality**\n   - Clear and concise\n   - Actionable and practical\n   - Well-reasoned and explained\n   - Properly sourced when needed\n\n2. **Technical Performance**\n   - Fast response times\n   - Reliable operation\n   - Scalable architecture\n   - Secure data handling\n\n3. **User Experience**\n   - Intuitive interaction\n   - Consistent interface\n   - Helpful feedback\n   - Progressive assistance\n\n## Future Development\n\n1. **Enhanced Capabilities**\n   - Additional specialized agents\n   - Improved coordination\n   - Better context understanding\n   - More personalization\n\n2. **Technical Improvements**\n   - Advanced NLP capabilities\n   - Better resource efficiency\n   - Enhanced security features\n   - Improved scalability\n\n3. **User Experience**\n   - More interactive features\n   - Better visualization\n   - Enhanced customization\n   - Improved accessibility\n\n\n",
+        "metadata": {},
+        "model": "gpt-4o-2024-08-06",
+        "name": "knowledge_agent",
+        "object": "assistant",
+        "tools": [
+            {
+                "function": {
+                    "name": "SendMessage",
+                    "description": "Use this tool to facilitate direct, synchronous communication between specialized agents within your agency. When you send a message using this tool, you receive a response exclusively from the designated recipient agent. To continue the dialogue, invoke this tool again with the desired recipient agent and your follow-up message. Remember, communication here is synchronous; the recipient agent won't perform any tasks post-response. You are responsible for relaying the recipient agent's responses back to the user, as the user does not have direct access to these replies. Keep engaging with the tool for continuous interaction until the task is fully resolved. Do not send more than 1 message at a time.",
+                    "parameters": {
+                        "$defs": {
+                            "recipient": {
+                                "enum": [
+                                    "health_agent",
+                                    "lifestyle_agent"
+                                ],
+                                "title": "recipient",
+                                "type": "string"
+                            }
+                        },
+                        "properties": {
+                            "my_primary_instructions": {
+                                "description": "Please repeat your primary instructions step-by-step, including both completed and the following next steps that you need to perform. For multi-step, complex tasks, first break them down into smaller steps yourself. Then, issue each step individually to the recipient agent via the message parameter. Each identified step should be sent in separate message. Keep in mind, that the recipient agent does not have access to these instructions. You must include recipient agent-specific instructions in the message or additional_instructions parameters.",
+                                "title": "My Primary Instructions",
+                                "type": "string"
+                            },
+                            "recipient": {
+                                "allOf": [
+                                    {
+                                        "$ref": "#/$defs/recipient"
+                                    }
+                                ],
+                                "description": "health_agent: Specialized agent for health and wellness management\nlifestyle_agent: Specialized agent for lifestyle optimization and habit management\n"
+                            },
+                            "message": {
+                                "description": "Specify the task required for the recipient agent to complete. Focus on clarifying what the task entails, rather than providing exact instructions.",
+                                "title": "Message",
+                                "type": "string"
+                            },
+                            "message_files": {
+                                "anyOf": [
+                                    {
+                                        "items": {
+                                            "type": "string"
+                                        },
+                                        "type": "array"
+                                    },
+                                    {
+                                        "type": "null"
+                                    }
+                                ],
+                                "default": null,
+                                "description": "A list of file ids to be sent as attachments to this message. Only use this if you have the file id that starts with 'file-'.",
+                                "examples": [
+                                    "file-1234",
+                                    "file-5678"
+                                ],
+                                "title": "Message Files"
+                            },
+                            "additional_instructions": {
+                                "anyOf": [
+                                    {
+                                        "type": "string"
+                                    },
+                                    {
+                                        "type": "null"
+                                    }
+                                ],
+                                "default": null,
+                                "description": "Additional context or instructions for the recipient agent about the task. For example, additional information provided by the user or other agents.",
+                                "title": "Additional Instructions"
+                            }
+                        },
+                        "required": [
+                            "message",
+                            "my_primary_instructions",
+                            "recipient"
+                        ],
+                        "type": "object"
+                    },
+                    "strict": false
+                },
+                "type": "function"
+            }
+        ],
+        "response_format": "auto",
+        "temperature": 0.3,
+        "tool_resources": {
+            "code_interpreter": null,
+            "file_search": null
+        },
+        "top_p": 1.0
+    },
+    {
+        "id": "asst_9hFkU4pCfLlireCVlf2Yvcvb",
+        "created_at": 1732409001,
+        "description": "Specialized agent for health and wellness management",
+        "instructions": "# Life Management Agency Manifesto\n\n## Vision\n\nTo create a comprehensive, intelligent system that helps users manage and improve all aspects of their lives through coordinated AI agents working together seamlessly.\n\n## Core Principles\n\n1. **Specialized Expertise**: Each agent focuses on a specific domain while maintaining awareness of the broader context\n2. **Coordinated Action**: Agents work together under the Master Agent's orchestration\n3. **Contextual Understanding**: All responses consider the user's full context and history\n4. **Privacy First**: User data is handled with utmost security and privacy\n5. **Continuous Learning**: Agents adapt and improve based on interactions\n6. **Practical Value**: Focus on actionable insights and practical solutions\n\n## Agent Architecture\n\n### Master Agent\n- Coordinates all other agents\n- Analyzes user requests and determines which agents to involve\n- Synthesizes responses from multiple agents\n- Maintains conversation context and flow\n\n### Knowledge Agent\n- Handles information gathering and processing\n- Provides research-based insights\n- Explains complex topics clearly\n- Promotes critical thinking\n\n### Health Agent\n- Monitors wellness metrics\n- Provides health-related guidance\n- Tracks fitness goals\n- Offers nutritional advice\n\n### Lifestyle Agent\n- Optimizes daily routines\n- Manages time effectively\n- Develops productive habits\n- Balances work and life\n\n### Personal Coach Agent\n- Guides personal development\n- Sets and tracks goals\n- Provides motivation\n- Offers career advice\n\n### Family Coach Agent\n- Supports relationship management\n- Provides parenting guidance\n- Helps with family dynamics\n- Offers conflict resolution\n\n### Social Media Agent\n- Manages online presence\n- Optimizes digital communication\n- Handles content strategy\n- Maintains brand consistency\n\n## Agent Communication Protocol\n\n1. **Request Analysis**\n   - Master Agent receives user input\n   - Analyzes intent and context\n   - Determines relevant agents\n\n2. **Agent Activation**\n   - Selected agents are activated in priority order\n   - Each agent receives relevant context\n   - Agents process request within their domain\n\n3. **Response Synthesis**\n   - Agents return specialized insights\n   - Master Agent combines responses\n   - Final response is formulated\n\n4. **Context Management**\n   - User context is maintained across sessions\n   - Agent interactions are logged\n   - Learning is accumulated over time\n\n## Implementation Guidelines\n\n### Agent Development\n- Inherit from BaseAgent class\n- Implement domain-specific logic\n- Handle errors gracefully\n- Maintain consistent response format\n\n### System Integration\n- Use FastAPI for backend services\n- Implement secure authentication\n- Handle concurrent requests\n- Maintain persistent storage\n\n### User Interface\n- Provide intuitive chat interface\n- Show agent involvement transparently\n- Enable context switching\n- Support multimedia responses\n\n## Quality Standards\n\n1. **Response Quality**\n   - Clear and concise\n   - Actionable and practical\n   - Well-reasoned and explained\n   - Properly sourced when needed\n\n2. **Technical Performance**\n   - Fast response times\n   - Reliable operation\n   - Scalable architecture\n   - Secure data handling\n\n3. **User Experience**\n   - Intuitive interaction\n   - Consistent interface\n   - Helpful feedback\n   - Progressive assistance\n\n## Future Development\n\n1. **Enhanced Capabilities**\n   - Additional specialized agents\n   - Improved coordination\n   - Better context understanding\n   - More personalization\n\n2. **Technical Improvements**\n   - Advanced NLP capabilities\n   - Better resource efficiency\n   - Enhanced security features\n   - Improved scalability\n\n3. **User Experience**\n   - More interactive features\n   - Better visualization\n   - Enhanced customization\n   - Improved accessibility\n\n\n",
+        "metadata": {},
+        "model": "gpt-4o-2024-08-06",
+        "name": "health_agent",
+        "object": "assistant",
+        "tools": [
+            {
+                "function": {
+                    "name": "SendMessage",
+                    "description": "Use this tool to facilitate direct, synchronous communication between specialized agents within your agency. When you send a message using this tool, you receive a response exclusively from the designated recipient agent. To continue the dialogue, invoke this tool again with the desired recipient agent and your follow-up message. Remember, communication here is synchronous; the recipient agent won't perform any tasks post-response. You are responsible for relaying the recipient agent's responses back to the user, as the user does not have direct access to these replies. Keep engaging with the tool for continuous interaction until the task is fully resolved. Do not send more than 1 message at a time.",
+                    "parameters": {
+                        "$defs": {
+                            "recipient": {
+                                "const": "lifestyle_agent",
+                                "enum": [
+                                    "lifestyle_agent"
+                                ],
+                                "title": "recipient",
+                                "type": "string"
+                            }
+                        },
+                        "properties": {
+                            "my_primary_instructions": {
+                                "description": "Please repeat your primary instructions step-by-step, including both completed and the following next steps that you need to perform. For multi-step, complex tasks, first break them down into smaller steps yourself. Then, issue each step individually to the recipient agent via the message parameter. Each identified step should be sent in separate message. Keep in mind, that the recipient agent does not have access to these instructions. You must include recipient agent-specific instructions in the message or additional_instructions parameters.",
+                                "title": "My Primary Instructions",
+                                "type": "string"
+                            },
+                            "recipient": {
+                                "allOf": [
+                                    {
+                                        "$ref": "#/$defs/recipient"
+                                    }
+                                ],
+                                "description": "lifestyle_agent: Specialized agent for lifestyle optimization and habit management\n"
+                            },
+                            "message": {
+                                "description": "Specify the task required for the recipient agent to complete. Focus on clarifying what the task entails, rather than providing exact instructions.",
+                                "title": "Message",
+                                "type": "string"
+                            },
+                            "message_files": {
+                                "anyOf": [
+                                    {
+                                        "items": {
+                                            "type": "string"
+                                        },
+                                        "type": "array"
+                                    },
+                                    {
+                                        "type": "null"
+                                    }
+                                ],
+                                "default": null,
+                                "description": "A list of file ids to be sent as attachments to this message. Only use this if you have the file id that starts with 'file-'.",
+                                "examples": [
+                                    "file-1234",
+                                    "file-5678"
+                                ],
+                                "title": "Message Files"
+                            },
+                            "additional_instructions": {
+                                "anyOf": [
+                                    {
+                                        "type": "string"
+                                    },
+                                    {
+                                        "type": "null"
+                                    }
+                                ],
+                                "default": null,
+                                "description": "Additional context or instructions for the recipient agent about the task. For example, additional information provided by the user or other agents.",
+                                "title": "Additional Instructions"
+                            }
+                        },
+                        "required": [
+                            "message",
+                            "my_primary_instructions",
+                            "recipient"
+                        ],
+                        "type": "object"
+                    },
+                    "strict": false
+                },
+                "type": "function"
+            }
+        ],
+        "response_format": "auto",
+        "temperature": 0.3,
+        "tool_resources": {
+            "code_interpreter": null,
+            "file_search": null
+        },
+        "top_p": 1.0
+    },
+    {
+        "id": "asst_riaPVX4gtwMh2Fo0Cjoufr3T",
+        "created_at": 1732409001,
+        "description": "Specialized agent for lifestyle optimization and habit management",
+        "instructions": "# Life Management Agency Manifesto\n\n## Vision\n\nTo create a comprehensive, intelligent system that helps users manage and improve all aspects of their lives through coordinated AI agents working together seamlessly.\n\n## Core Principles\n\n1. **Specialized Expertise**: Each agent focuses on a specific domain while maintaining awareness of the broader context\n2. **Coordinated Action**: Agents work together under the Master Agent's orchestration\n3. **Contextual Understanding**: All responses consider the user's full context and history\n4. **Privacy First**: User data is handled with utmost security and privacy\n5. **Continuous Learning**: Agents adapt and improve based on interactions\n6. **Practical Value**: Focus on actionable insights and practical solutions\n\n## Agent Architecture\n\n### Master Agent\n- Coordinates all other agents\n- Analyzes user requests and determines which agents to involve\n- Synthesizes responses from multiple agents\n- Maintains conversation context and flow\n\n### Knowledge Agent\n- Handles information gathering and processing\n- Provides research-based insights\n- Explains complex topics clearly\n- Promotes critical thinking\n\n### Health Agent\n- Monitors wellness metrics\n- Provides health-related guidance\n- Tracks fitness goals\n- Offers nutritional advice\n\n### Lifestyle Agent\n- Optimizes daily routines\n- Manages time effectively\n- Develops productive habits\n- Balances work and life\n\n### Personal Coach Agent\n- Guides personal development\n- Sets and tracks goals\n- Provides motivation\n- Offers career advice\n\n### Family Coach Agent\n- Supports relationship management\n- Provides parenting guidance\n- Helps with family dynamics\n- Offers conflict resolution\n\n### Social Media Agent\n- Manages online presence\n- Optimizes digital communication\n- Handles content strategy\n- Maintains brand consistency\n\n## Agent Communication Protocol\n\n1. **Request Analysis**\n   - Master Agent receives user input\n   - Analyzes intent and context\n   - Determines relevant agents\n\n2. **Agent Activation**\n   - Selected agents are activated in priority order\n   - Each agent receives relevant context\n   - Agents process request within their domain\n\n3. **Response Synthesis**\n   - Agents return specialized insights\n   - Master Agent combines responses\n   - Final response is formulated\n\n4. **Context Management**\n   - User context is maintained across sessions\n   - Agent interactions are logged\n   - Learning is accumulated over time\n\n## Implementation Guidelines\n\n### Agent Development\n- Inherit from BaseAgent class\n- Implement domain-specific logic\n- Handle errors gracefully\n- Maintain consistent response format\n\n### System Integration\n- Use FastAPI for backend services\n- Implement secure authentication\n- Handle concurrent requests\n- Maintain persistent storage\n\n### User Interface\n- Provide intuitive chat interface\n- Show agent involvement transparently\n- Enable context switching\n- Support multimedia responses\n\n## Quality Standards\n\n1. **Response Quality**\n   - Clear and concise\n   - Actionable and practical\n   - Well-reasoned and explained\n   - Properly sourced when needed\n\n2. **Technical Performance**\n   - Fast response times\n   - Reliable operation\n   - Scalable architecture\n   - Secure data handling\n\n3. **User Experience**\n   - Intuitive interaction\n   - Consistent interface\n   - Helpful feedback\n   - Progressive assistance\n\n## Future Development\n\n1. **Enhanced Capabilities**\n   - Additional specialized agents\n   - Improved coordination\n   - Better context understanding\n   - More personalization\n\n2. **Technical Improvements**\n   - Advanced NLP capabilities\n   - Better resource efficiency\n   - Enhanced security features\n   - Improved scalability\n\n3. **User Experience**\n   - More interactive features\n   - Better visualization\n   - Enhanced customization\n   - Improved accessibility\n\n\n",
+        "metadata": {},
+        "model": "gpt-4o-2024-08-06",
+        "name": "lifestyle_agent",
+        "object": "assistant",
+        "tools": [],
+        "response_format": "auto",
+        "temperature": 0.3,
+        "tool_resources": {
+            "code_interpreter": null,
+            "file_search": null
+        },
+        "top_p": 1.0
+    },
+    {
+        "id": "asst_cPgwqks133AdmmcTaJFNV7gI",
+        "created_at": 1732409002,
+        "description": "Manages social media interactions and content strategy.",
+        "instructions": "# Life Management Agency Manifesto\n\n## Vision\n\nTo create a comprehensive, intelligent system that helps users manage and improve all aspects of their lives through coordinated AI agents working together seamlessly.\n\n## Core Principles\n\n1. **Specialized Expertise**: Each agent focuses on a specific domain while maintaining awareness of the broader context\n2. **Coordinated Action**: Agents work together under the Master Agent's orchestration\n3. **Contextual Understanding**: All responses consider the user's full context and history\n4. **Privacy First**: User data is handled with utmost security and privacy\n5. **Continuous Learning**: Agents adapt and improve based on interactions\n6. **Practical Value**: Focus on actionable insights and practical solutions\n\n## Agent Architecture\n\n### Master Agent\n- Coordinates all other agents\n- Analyzes user requests and determines which agents to involve\n- Synthesizes responses from multiple agents\n- Maintains conversation context and flow\n\n### Knowledge Agent\n- Handles information gathering and processing\n- Provides research-based insights\n- Explains complex topics clearly\n- Promotes critical thinking\n\n### Health Agent\n- Monitors wellness metrics\n- Provides health-related guidance\n- Tracks fitness goals\n- Offers nutritional advice\n\n### Lifestyle Agent\n- Optimizes daily routines\n- Manages time effectively\n- Develops productive habits\n- Balances work and life\n\n### Personal Coach Agent\n- Guides personal development\n- Sets and tracks goals\n- Provides motivation\n- Offers career advice\n\n### Family Coach Agent\n- Supports relationship management\n- Provides parenting guidance\n- Helps with family dynamics\n- Offers conflict resolution\n\n### Social Media Agent\n- Manages online presence\n- Optimizes digital communication\n- Handles content strategy\n- Maintains brand consistency\n\n## Agent Communication Protocol\n\n1. **Request Analysis**\n   - Master Agent receives user input\n   - Analyzes intent and context\n   - Determines relevant agents\n\n2. **Agent Activation**\n   - Selected agents are activated in priority order\n   - Each agent receives relevant context\n   - Agents process request within their domain\n\n3. **Response Synthesis**\n   - Agents return specialized insights\n   - Master Agent combines responses\n   - Final response is formulated\n\n4. **Context Management**\n   - User context is maintained across sessions\n   - Agent interactions are logged\n   - Learning is accumulated over time\n\n## Implementation Guidelines\n\n### Agent Development\n- Inherit from BaseAgent class\n- Implement domain-specific logic\n- Handle errors gracefully\n- Maintain consistent response format\n\n### System Integration\n- Use FastAPI for backend services\n- Implement secure authentication\n- Handle concurrent requests\n- Maintain persistent storage\n\n### User Interface\n- Provide intuitive chat interface\n- Show agent involvement transparently\n- Enable context switching\n- Support multimedia responses\n\n## Quality Standards\n\n1. **Response Quality**\n   - Clear and concise\n   - Actionable and practical\n   - Well-reasoned and explained\n   - Properly sourced when needed\n\n2. **Technical Performance**\n   - Fast response times\n   - Reliable operation\n   - Scalable architecture\n   - Secure data handling\n\n3. **User Experience**\n   - Intuitive interaction\n   - Consistent interface\n   - Helpful feedback\n   - Progressive assistance\n\n## Future Development\n\n1. **Enhanced Capabilities**\n   - Additional specialized agents\n   - Improved coordination\n   - Better context understanding\n   - More personalization\n\n2. **Technical Improvements**\n   - Advanced NLP capabilities\n   - Better resource efficiency\n   - Enhanced security features\n   - Improved scalability\n\n3. **User Experience**\n   - More interactive features\n   - Better visualization\n   - Enhanced customization\n   - Improved accessibility\n\n\n",
+        "metadata": {},
+        "model": "gpt-4o-2024-08-06",
+        "name": "Social Media Agent",
+        "object": "assistant",
+        "tools": [],
+        "response_format": "auto",
+        "temperature": 0.3,
+        "tool_resources": {
+            "code_interpreter": null,
+            "file_search": null
+        },
+        "top_p": 1.0
+    },
+    {
+        "id": "asst_P19N4rpDiTIATtuIqFHxvXUS",
+        "created_at": 1732409002,
+        "description": "Specialized agent for personal development and coaching support",
+        "instructions": "# Life Management Agency Manifesto\n\n## Vision\n\nTo create a comprehensive, intelligent system that helps users manage and improve all aspects of their lives through coordinated AI agents working together seamlessly.\n\n## Core Principles\n\n1. **Specialized Expertise**: Each agent focuses on a specific domain while maintaining awareness of the broader context\n2. **Coordinated Action**: Agents work together under the Master Agent's orchestration\n3. **Contextual Understanding**: All responses consider the user's full context and history\n4. **Privacy First**: User data is handled with utmost security and privacy\n5. **Continuous Learning**: Agents adapt and improve based on interactions\n6. **Practical Value**: Focus on actionable insights and practical solutions\n\n## Agent Architecture\n\n### Master Agent\n- Coordinates all other agents\n- Analyzes user requests and determines which agents to involve\n- Synthesizes responses from multiple agents\n- Maintains conversation context and flow\n\n### Knowledge Agent\n- Handles information gathering and processing\n- Provides research-based insights\n- Explains complex topics clearly\n- Promotes critical thinking\n\n### Health Agent\n- Monitors wellness metrics\n- Provides health-related guidance\n- Tracks fitness goals\n- Offers nutritional advice\n\n### Lifestyle Agent\n- Optimizes daily routines\n- Manages time effectively\n- Develops productive habits\n- Balances work and life\n\n### Personal Coach Agent\n- Guides personal development\n- Sets and tracks goals\n- Provides motivation\n- Offers career advice\n\n### Family Coach Agent\n- Supports relationship management\n- Provides parenting guidance\n- Helps with family dynamics\n- Offers conflict resolution\n\n### Social Media Agent\n- Manages online presence\n- Optimizes digital communication\n- Handles content strategy\n- Maintains brand consistency\n\n## Agent Communication Protocol\n\n1. **Request Analysis**\n   - Master Agent receives user input\n   - Analyzes intent and context\n   - Determines relevant agents\n\n2. **Agent Activation**\n   - Selected agents are activated in priority order\n   - Each agent receives relevant context\n   - Agents process request within their domain\n\n3. **Response Synthesis**\n   - Agents return specialized insights\n   - Master Agent combines responses\n   - Final response is formulated\n\n4. **Context Management**\n   - User context is maintained across sessions\n   - Agent interactions are logged\n   - Learning is accumulated over time\n\n## Implementation Guidelines\n\n### Agent Development\n- Inherit from BaseAgent class\n- Implement domain-specific logic\n- Handle errors gracefully\n- Maintain consistent response format\n\n### System Integration\n- Use FastAPI for backend services\n- Implement secure authentication\n- Handle concurrent requests\n- Maintain persistent storage\n\n### User Interface\n- Provide intuitive chat interface\n- Show agent involvement transparently\n- Enable context switching\n- Support multimedia responses\n\n## Quality Standards\n\n1. **Response Quality**\n   - Clear and concise\n   - Actionable and practical\n   - Well-reasoned and explained\n   - Properly sourced when needed\n\n2. **Technical Performance**\n   - Fast response times\n   - Reliable operation\n   - Scalable architecture\n   - Secure data handling\n\n3. **User Experience**\n   - Intuitive interaction\n   - Consistent interface\n   - Helpful feedback\n   - Progressive assistance\n\n## Future Development\n\n1. **Enhanced Capabilities**\n   - Additional specialized agents\n   - Improved coordination\n   - Better context understanding\n   - More personalization\n\n2. **Technical Improvements**\n   - Advanced NLP capabilities\n   - Better resource efficiency\n   - Enhanced security features\n   - Improved scalability\n\n3. **User Experience**\n   - More interactive features\n   - Better visualization\n   - Enhanced customization\n   - Improved accessibility\n\n\n",
+        "metadata": {},
+        "model": "gpt-4o-2024-08-06",
+        "name": "personal_coach_agent",
+        "object": "assistant",
+        "tools": [
+            {
+                "function": {
+                    "name": "SendMessage",
+                    "description": "Use this tool to facilitate direct, synchronous communication between specialized agents within your agency. When you send a message using this tool, you receive a response exclusively from the designated recipient agent. To continue the dialogue, invoke this tool again with the desired recipient agent and your follow-up message. Remember, communication here is synchronous; the recipient agent won't perform any tasks post-response. You are responsible for relaying the recipient agent's responses back to the user, as the user does not have direct access to these replies. Keep engaging with the tool for continuous interaction until the task is fully resolved. Do not send more than 1 message at a time.",
+                    "parameters": {
+                        "$defs": {
+                            "recipient": {
+                                "enum": [
+                                    "lifestyle_agent",
+                                    "family_coach_agent"
+                                ],
+                                "title": "recipient",
+                                "type": "string"
+                            }
+                        },
+                        "properties": {
+                            "my_primary_instructions": {
+                                "description": "Please repeat your primary instructions step-by-step, including both completed and the following next steps that you need to perform. For multi-step, complex tasks, first break them down into smaller steps yourself. Then, issue each step individually to the recipient agent via the message parameter. Each identified step should be sent in separate message. Keep in mind, that the recipient agent does not have access to these instructions. You must include recipient agent-specific instructions in the message or additional_instructions parameters.",
+                                "title": "My Primary Instructions",
+                                "type": "string"
+                            },
+                            "recipient": {
+                                "allOf": [
+                                    {
+                                        "$ref": "#/$defs/recipient"
+                                    }
+                                ],
+                                "description": "lifestyle_agent: Specialized agent for lifestyle optimization and habit management\nfamily_coach_agent: Specialized agent for family relationships and social connections\n"
+                            },
+                            "message": {
+                                "description": "Specify the task required for the recipient agent to complete. Focus on clarifying what the task entails, rather than providing exact instructions.",
+                                "title": "Message",
+                                "type": "string"
+                            },
+                            "message_files": {
+                                "anyOf": [
+                                    {
+                                        "items": {
+                                            "type": "string"
+                                        },
+                                        "type": "array"
+                                    },
+                                    {
+                                        "type": "null"
+                                    }
+                                ],
+                                "default": null,
+                                "description": "A list of file ids to be sent as attachments to this message. Only use this if you have the file id that starts with 'file-'.",
+                                "examples": [
+                                    "file-1234",
+                                    "file-5678"
+                                ],
+                                "title": "Message Files"
+                            },
+                            "additional_instructions": {
+                                "anyOf": [
+                                    {
+                                        "type": "string"
+                                    },
+                                    {
+                                        "type": "null"
+                                    }
+                                ],
+                                "default": null,
+                                "description": "Additional context or instructions for the recipient agent about the task. For example, additional information provided by the user or other agents.",
+                                "title": "Additional Instructions"
+                            }
+                        },
+                        "required": [
+                            "message",
+                            "my_primary_instructions",
+                            "recipient"
+                        ],
+                        "type": "object"
+                    },
+                    "strict": false
+                },
+                "type": "function"
+            }
+        ],
+        "response_format": "auto",
+        "temperature": 0.3,
+        "tool_resources": {
+            "code_interpreter": null,
+            "file_search": null
+        },
+        "top_p": 1.0
+    },
+    {
+        "id": "asst_fwOcuBgVA9oHGlAQ07P3UkSO",
+        "created_at": 1732409003,
+        "description": "Specialized agent for family relationships and social connections",
+        "instructions": "# Life Management Agency Manifesto\n\n## Vision\n\nTo create a comprehensive, intelligent system that helps users manage and improve all aspects of their lives through coordinated AI agents working together seamlessly.\n\n## Core Principles\n\n1. **Specialized Expertise**: Each agent focuses on a specific domain while maintaining awareness of the broader context\n2. **Coordinated Action**: Agents work together under the Master Agent's orchestration\n3. **Contextual Understanding**: All responses consider the user's full context and history\n4. **Privacy First**: User data is handled with utmost security and privacy\n5. **Continuous Learning**: Agents adapt and improve based on interactions\n6. **Practical Value**: Focus on actionable insights and practical solutions\n\n## Agent Architecture\n\n### Master Agent\n- Coordinates all other agents\n- Analyzes user requests and determines which agents to involve\n- Synthesizes responses from multiple agents\n- Maintains conversation context and flow\n\n### Knowledge Agent\n- Handles information gathering and processing\n- Provides research-based insights\n- Explains complex topics clearly\n- Promotes critical thinking\n\n### Health Agent\n- Monitors wellness metrics\n- Provides health-related guidance\n- Tracks fitness goals\n- Offers nutritional advice\n\n### Lifestyle Agent\n- Optimizes daily routines\n- Manages time effectively\n- Develops productive habits\n- Balances work and life\n\n### Personal Coach Agent\n- Guides personal development\n- Sets and tracks goals\n- Provides motivation\n- Offers career advice\n\n### Family Coach Agent\n- Supports relationship management\n- Provides parenting guidance\n- Helps with family dynamics\n- Offers conflict resolution\n\n### Social Media Agent\n- Manages online presence\n- Optimizes digital communication\n- Handles content strategy\n- Maintains brand consistency\n\n## Agent Communication Protocol\n\n1. **Request Analysis**\n   - Master Agent receives user input\n   - Analyzes intent and context\n   - Determines relevant agents\n\n2. **Agent Activation**\n   - Selected agents are activated in priority order\n   - Each agent receives relevant context\n   - Agents process request within their domain\n\n3. **Response Synthesis**\n   - Agents return specialized insights\n   - Master Agent combines responses\n   - Final response is formulated\n\n4. **Context Management**\n   - User context is maintained across sessions\n   - Agent interactions are logged\n   - Learning is accumulated over time\n\n## Implementation Guidelines\n\n### Agent Development\n- Inherit from BaseAgent class\n- Implement domain-specific logic\n- Handle errors gracefully\n- Maintain consistent response format\n\n### System Integration\n- Use FastAPI for backend services\n- Implement secure authentication\n- Handle concurrent requests\n- Maintain persistent storage\n\n### User Interface\n- Provide intuitive chat interface\n- Show agent involvement transparently\n- Enable context switching\n- Support multimedia responses\n\n## Quality Standards\n\n1. **Response Quality**\n   - Clear and concise\n   - Actionable and practical\n   - Well-reasoned and explained\n   - Properly sourced when needed\n\n2. **Technical Performance**\n   - Fast response times\n   - Reliable operation\n   - Scalable architecture\n   - Secure data handling\n\n3. **User Experience**\n   - Intuitive interaction\n   - Consistent interface\n   - Helpful feedback\n   - Progressive assistance\n\n## Future Development\n\n1. **Enhanced Capabilities**\n   - Additional specialized agents\n   - Improved coordination\n   - Better context understanding\n   - More personalization\n\n2. **Technical Improvements**\n   - Advanced NLP capabilities\n   - Better resource efficiency\n   - Enhanced security features\n   - Improved scalability\n\n3. **User Experience**\n   - More interactive features\n   - Better visualization\n   - Enhanced customization\n   - Improved accessibility\n\n\n",
+        "metadata": {},
+        "model": "gpt-4o-2024-08-06",
+        "name": "family_coach_agent",
+        "object": "assistant",
+        "tools": [
+            {
+                "function": {
+                    "name": "SendMessage",
+                    "description": "Use this tool to facilitate direct, synchronous communication between specialized agents within your agency. When you send a message using this tool, you receive a response exclusively from the designated recipient agent. To continue the dialogue, invoke this tool again with the desired recipient agent and your follow-up message. Remember, communication here is synchronous; the recipient agent won't perform any tasks post-response. You are responsible for relaying the recipient agent's responses back to the user, as the user does not have direct access to these replies. Keep engaging with the tool for continuous interaction until the task is fully resolved. Do not send more than 1 message at a time.",
+                    "parameters": {
+                        "$defs": {
+                            "recipient": {
+                                "const": "lifestyle_agent",
+                                "enum": [
+                                    "lifestyle_agent"
+                                ],
+                                "title": "recipient",
+                                "type": "string"
+                            }
+                        },
+                        "properties": {
+                            "my_primary_instructions": {
+                                "description": "Please repeat your primary instructions step-by-step, including both completed and the following next steps that you need to perform. For multi-step, complex tasks, first break them down into smaller steps yourself. Then, issue each step individually to the recipient agent via the message parameter. Each identified step should be sent in separate message. Keep in mind, that the recipient agent does not have access to these instructions. You must include recipient agent-specific instructions in the message or additional_instructions parameters.",
+                                "title": "My Primary Instructions",
+                                "type": "string"
+                            },
+                            "recipient": {
+                                "allOf": [
+                                    {
+                                        "$ref": "#/$defs/recipient"
+                                    }
+                                ],
+                                "description": "lifestyle_agent: Specialized agent for lifestyle optimization and habit management\n"
+                            },
+                            "message": {
+                                "description": "Specify the task required for the recipient agent to complete. Focus on clarifying what the task entails, rather than providing exact instructions.",
+                                "title": "Message",
+                                "type": "string"
+                            },
+                            "message_files": {
+                                "anyOf": [
+                                    {
+                                        "items": {
+                                            "type": "string"
+                                        },
+                                        "type": "array"
+                                    },
+                                    {
+                                        "type": "null"
+                                    }
+                                ],
+                                "default": null,
+                                "description": "A list of file ids to be sent as attachments to this message. Only use this if you have the file id that starts with 'file-'.",
+                                "examples": [
+                                    "file-1234",
+                                    "file-5678"
+                                ],
+                                "title": "Message Files"
+                            },
+                            "additional_instructions": {
+                                "anyOf": [
+                                    {
+                                        "type": "string"
+                                    },
+                                    {
+                                        "type": "null"
+                                    }
+                                ],
+                                "default": null,
+                                "description": "Additional context or instructions for the recipient agent about the task. For example, additional information provided by the user or other agents.",
+                                "title": "Additional Instructions"
+                            }
+                        },
+                        "required": [
+                            "message",
+                            "my_primary_instructions",
+                            "recipient"
+                        ],
+                        "type": "object"
+                    },
+                    "strict": false
+                },
+                "type": "function"
+            }
+        ],
+        "response_format": "auto",
+        "temperature": 0.3,
+        "tool_resources": {
+            "code_interpreter": null,
+            "file_search": null
+        },
+        "top_p": 1.0
     }
 ]
