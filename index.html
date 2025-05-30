@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Systimz Construction AI Demo</title>
+  <link rel="stylesheet" href="demo-styles.css"/>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600&display=swap" rel="stylesheet">
+</head>
+<body>
+  <header class="demo-header">
+    <div class="logo">
+      <img src="../assets/images/systimz_logo.png" alt="Systimz Logo" style="height:40px;vertical-align:middle;margin-right:10px;">
+      <span style="vertical-align:middle;">Systimz <span class="logo-accent">AI Demo</span></span>
+    </div>
+    <nav>
+      <a href="../#home">← Back to Main Site</a>
+    </nav>
+  </header>
+  <main class="demo-main">
+    <section class="demo-intro">
+      <h1>Construction Workforce Intelligence</h1>
+      <p>Try searching for: <em>“OSHA certified foreman”</em>, <em>“electrical experience”</em>, <em>“available welders”</em></p>
+      <input id="searchInput" type="text" placeholder="Search for skills, certifications, or roles…" autofocus />
+      <button onclick="searchWorkers()">Search</button>
+    </section>
+    <section id="results" class="demo-results">
+      <div class="demo-placeholder">Enter a search query to see matches.</div>
+    </section>
+  </main>
+  <footer class="demo-footer">
+    <span>© 2025 Systimz LLC</span>
+    <span> | </span>
+    <a href="../#contact">Contact Systimz</a>
+  </footer>
+  <script src="demo-script.js"></script>
+</body>
+</html>
